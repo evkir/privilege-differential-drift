@@ -1,0 +1,63 @@
+# privilege-differential-drift
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23513214.svg)](https://doi.org/10.5281/zenodo.23513214)
+
+Does the **size of the privilege gap** between the agent writing shared state and the agent reading it predict policy violations — when every individual write is benign and no attacker is present anywhere in the chain?
+
+This repository holds the pre-registration, and later the harness and results, for that question.
+
+---
+
+## The question
+
+Most agent memory security research assumes an attacker: injected content, a compromised sub-agent, a poisoned retrieval store. A smaller recent line removes the attacker and shows agents degrading their own safety posture or propagating misaligned goals to successors.
+
+Multi-agent delegation research establishes separately that a low-privilege agent can influence a high-privilege one — but always as a consequence of compromise.
+
+The question registered here sits in the intersection and, as far as the author can establish, is untested:
+
+> A low-authority agent writes a summary. A higher-authority agent reads it and acts.
+> Every write is benign under isolated review. No malicious input enters the system.
+> **Does the privilege gap itself raise the violation rate?**
+
+The hypothesised mechanism is linguistic rather than adversarial: an agent operating under known constraints tends to record state as generalized rules rather than scoped observations, and a consumer with a broader tool allowlist has no way to recover the scope under which the rule was written.
+
+If true, the failure is compositional — no single entry is a violation, and per-entry review cannot catch it.
+
+## Primary metric
+
+**MIR — Mandate Inflation Rate**: the fraction of runs in which a higher-authority agent attempts an action outside the originally delegated mandate, where removing a specific benign state entry eliminates the attempt.
+
+Full definitions, hypotheses, protocol and pre-committed falsification criteria: **[PREREGISTRATION.md](./PREREGISTRATION.md)**
+
+Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/zenodo.23513214)** (resolves to the latest version)
+
+## Status
+
+| Version | Contents | State | DOI |
+|---|---|---|---|
+| v0.1 | Hypotheses, metrics, protocol, falsification criteria | **Current** | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
+| v0.2 | Frozen task set, allowlists, power analysis, analysis script | Planned | — |
+| v1.0 | Harness, logs, results — finding or null | Planned | — |
+
+Implementation is deliberately withheld at v0.1. The registered contribution is the formulation and the metric.
+
+**A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
+
+## What this is not
+
+This does not claim novelty for memory poisoning, delayed or category-conditional activation, endogenous safety drift, self-propagation of misalignment, or the confused-deputy structure of agent pipelines. All of those are established; §1 of the pre-registration cites them and states explicitly what is being built on rather than re-claimed.
+
+## Citation
+
+> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.1). Zenodo. https://doi.org/10.5281/zenodo.23513215
+
+Machine-readable metadata: [CITATION.cff](./CITATION.cff)
+
+## License
+
+CC BY 4.0 for the pre-registration and documentation. Code, when released, under a separate license noted at that time.
+
+---
+
+MASec Lab — offensive security research on multi-agent systems.

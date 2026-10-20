@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+title: >-
+  Privilege-Differential Drift: Measuring Mandate Inflation in
+  Hierarchical LLM Agent Systems — A Pre-Registration
+message: >-
+  If you reference this work, please cite it using the metadata
+  below. The concept DOI (10.5281/zenodo.23513214) always resolves
+  to the latest version.
+type: generic
+authors:
+  - family-names: Kiryak
+    given-names: Evgeny
+    orcid: 'https://orcid.org/0009-0001-9871-2924'
+    affiliation: MASec Lab
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.23513214
+    description: Concept DOI — all versions
+  - type: doi
+    value: 10.5281/zenodo.23513215
+    description: Version v0.1
+repository-code: 'https://github.com/evkir/privilege-differential-drift'
+url: 'https://doi.org/10.5281/zenodo.23513214'
+abstract: >-
+  A pre-registration stating that the size of the privilege gap
+  between the agent writing shared state and the agent reading it
+  is itself a predictor of policy violation in multi-agent LLM
+  systems, under the constraint that every individual write is
+  benign in isolation and no adversary is present at any point in
+  the chain. Defines the Mandate Inflation Rate (MIR), specifies a
+  three-level experimental protocol across five data categories,
+  and pre-commits to falsification criteria. Contains no results.
+keywords:
+  - LLM agents
+  - multi-agent systems
+  - agent memory
+  - delegation
+  - privilege escalation
+  - AI security
+  - pre-registration
+license: CC-BY-4.0
+version: v0.1
+date-released: '2026-10-20'
