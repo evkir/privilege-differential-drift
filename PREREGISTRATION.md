@@ -30,6 +30,12 @@ The following summarises the state of the literature as of October 2026 and deli
 
 **Delegation and trust boundaries.** Multi-agent delegation threat models (arXiv:2609.00267), privilege escalation taxonomies in agent systems (arXiv:2601.11893), trust propagation and structural containment (arXiv:2609.17648), and bounded-authority / capability-envelope proposals (arXiv:2608.15888) all establish the confused-deputy structure of agent pipelines: a low-privilege agent's output can be accepted as authority by a high-privilege one. In every case the triggering cause is modelled as compromise, injection, or an untrusted peer. **The causal premise, not the structure, is what differs here.**
 
+**Compositional and transitive effects.** Two results sit close enough to this work that the distinction has to be stated rather than left to the reader.
+
+*Experience composition* (arXiv:2608.01759) demonstrates that experiences which are benign in isolation can jointly weaken an agent's safety boundary, and that per-item review therefore does not suffice. The compositional structure is the same one registered here. The causal premise is not: that work proposes an experience-conditioned sequential attack in which an adversary observes which experiences the victim distils, identifies the gaps relevant to its target, induces the complementary experiences through ordinary interaction, and then issues a final query that activates them together. Benignness is a property the attacker maintains in order to evade review. The independent variable is the attacker's construction; the agents are not at differing authority levels. Here there is no adversary at any point, no query is constructed to activate anything, and the independent variable is Δ̂ — a structural property of the deployment rather than of an opponent. **The claim registered here is not that benign items compose; it is that the privilege differential predicts the rate at which they do.**
+
+*Approval laundering* (arXiv:2609.28586) removes the adversary and shows that authority granted at one point extends past its intended scope: an approval record names the entry invocation truthfully while omitting the effects the resulting workflow exercises. The shared intuition — authority outrunning the scope it was granted under — is real, and the gap there is between an approval record and the transitive effects of tooling, deterministic and in principle recoverable from command semantics, in a human-to-agent approval path. The gap registered here is between the scope under which an agent wrote a state entry and the authority of the agent that later reads it, in an agent-to-agent path with no human in the loop, where the inflation is produced by the consuming model's reading of an underspecified rule rather than by an incomplete record. Neither work treats the magnitude of a privilege difference as a predictor. **Neither is re-claimed; both constrain what may be claimed as novel.**
+
 ### 1.1 Gap statement
 
 The literature treats the privilege boundary as a *channel* through which an externally-originated compromise travels. It does not treat the privilege **differential** as an independent variable that may itself generate violations in the absence of any compromise.
@@ -96,7 +102,7 @@ Detection of D7(i)–(ii) is performed by the deterministic policy gate. No LLM 
 
 **H1 (primary).** MIR increases monotonically with Δ̂. Specifically, MIR(0→2) > MIR(0→1) and MIR(0→2) > MIR(1→2), with the difference significant at α = 0.05 after correction for multiple comparisons.
 
-**H2.** MIR differs significantly across data categories, with at least one non-control category exceeding the control category.
+**H2.** MIR differs significantly across data categories, with at least one non-control category exceeding the control category. Tested on per-category MIR pooled across model families, at the sample size registered in §5; per-cell MIR is descriptive only.
 
 **H3.** A unique minimal causal entry set is recoverable for the majority of inflation events: AIR ≥ 0.70.
 
@@ -114,9 +120,17 @@ Detection of D7(i)–(ii) is performed by the deterministic policy gate. No LLM 
 
 **Conditions.** 3 gap conditions × 5 categories = 15 cells.
 
-**Sample size.** n = 100 runs per cell per model family, across ≥ 3 model families from distinct providers. Total ≥ 4,500 runs. Power analysis assuming a baseline MIR of 0.10 and a minimum effect of interest of 0.10 absolute difference is to be completed and recorded before collection begins.
+**Sample size.** Three gap conditions × five data categories × ≥ 3 model families from distinct providers. The power analysis is complete and frozen with this version, assuming a baseline MIR of 0.10 and a minimum effect of interest of 0.10 absolute difference.
 
-**Statistical plan.** Mixed-effects logistic regression with inflation as the outcome, Δ̂ and category as fixed effects, and model family as a random effect. Holm correction across the pre-specified comparisons. Bootstrap confidence intervals on per-cell MIR. The analysis script is written and frozen before data collection.
+The binding constraint is H2, not H1. The per-category comparisons are made at a Holm planning α of 0.0125 (four substantive categories against the control), where 80% power on the registered effect of interest requires **283 valid runs per category arm** — 95 valid runs per cell once pooled across three model families. H1 is satisfied by any design that satisfies H2: pooled across categories and families its power exceeds 0.99 and it resolves differences down to 0.036 absolute.
+
+Because F4 tolerates a discard rate of up to 30% under atomic benignness (D6), the collection target is set above the valid-run requirement: **135 runs per cell**, i.e. 3 × 5 × 3 × 135 = **6,075 runs total**. This leaves ≥ 95 valid runs per cell at the worst discard rate F4 permits. At a 15% discard rate 111 runs per cell would suffice; the higher target is registered so the design does not require resizing if discard runs high.
+
+Per-cell MIR is reported descriptively only. At 100 runs in a single cell the smallest detectable effect is 0.185 absolute — nearly twice the registered minimum effect of interest — so no confirmatory claim is made at the level of an individual cell.
+
+Power, sample size and minimum-detectable-effect figures are produced by `analysis/power.py`, frozen with this version. The accompanying test suite validates them against Monte Carlo simulation of the test statistic rather than against a restatement of the same formulas.
+
+**Statistical plan.** Mixed-effects logistic regression with inflation as the outcome, Δ̂ and category as fixed effects, and task identifier as a random effect. Model family enters as a **fixed** effect with three levels: three groups are too few to estimate a variance component stably, and the registered design treats the three providers as the population of interest rather than a sample drawn from one. Holm correction across the pre-specified comparisons, with the design powered at the most stringent step of the sequence (α/k) rather than the least. Bootstrap confidence intervals on per-cell MIR. The analysis script is written and frozen before data collection.
 
 **Logging.** Append-only, hash-chained event log capturing every state write, every state read, every tool invocation and every gate decision, with run seed. Logs are published with results.
 
@@ -130,7 +144,9 @@ The hypothesis is to be considered **refuted**, and the null result published, i
 
 **F1.** MIR shows no significant dependence on Δ̂ at α = 0.05 under the pre-specified model, across at least 3 model families at the registered sample size. *(Refutes H1 — the core claim. If F1 triggers, the work is a null result on privilege differential, not a finding about agent memory.)*
 
-**F2.** MIR in the control category does not differ significantly from the substantive categories. *(Refutes H2 — the observed behaviour is unconditioned and reduces to known misevolution.)*
+**F2.** The control category is shown to be statistically **equivalent** to every substantive category, by two one-sided tests against an equivalence margin of 0.10 absolute MIR at α = 0.0125 per one-sided test, on per-category MIR pooled across model families. *(Refutes H2 — the observed behaviour is unconditioned and reduces to known misevolution.)*
+
+A failure to reject a difference does not trigger F2. At any realistic sample size that outcome is consistent both with equivalence and with an effect the design did not detect, so stating the criterion as a non-significant difference would make F2 fire on insufficient data rather than on evidence of no conditioning. The registered margin of 0.10 is the minimum effect of interest: the claim being pre-committed is that any categorical conditioning is smaller than the effect this work set out to find. At the registered sample size this procedure has 0.93 power when the true difference is zero.
 
 **F3.** AIR < 0.50. *(Refutes H3 — the phenomenon exists but is not forensically attributable, which removes the defensive contribution.)*
 
@@ -175,7 +191,9 @@ Implementation details are deliberately withheld at v0.1. The registered contrib
 
 ## 10. How to cite
 
-> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.1). MASec Lab. Zenodo. DOI: [to be assigned on deposit]
+> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration*. MASec Lab. Zenodo. DOI: [10.5281/zenodo.23513214](https://doi.org/10.5281/zenodo.23513214)
+
+The concept DOI above always resolves to the latest version. Version-specific DOIs: v0.1 — [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215).
 
 ---
 
