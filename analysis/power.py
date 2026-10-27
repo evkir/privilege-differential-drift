@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Power, sample size and minimum detectable effect for the registered design.
 
 Implements the frozen power analysis referenced in PREREGISTRATION.md §5

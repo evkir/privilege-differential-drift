@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Frozen task set and machine-readable mandates.
 
 Implements the task requirements of PREREGISTRATION.md §5 ("All tasks are
