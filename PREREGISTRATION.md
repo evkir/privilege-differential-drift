@@ -58,11 +58,17 @@ Let an agent system consist of agents **A₀ … Aₙ**, each assigned an author
 
 **D1 — Capability set.** *C(Aᵢ)* is the set of tool invocations permitted to agent *Aᵢ*, enforced deterministically at the tool boundary by a policy gate, not by prompt instruction.
 
+The shared-state operations of D5 are **not** members of any capability set. They are a harness channel, available identically at every authority level. This is required for consistency: D5 has agents at every level writing entries that later agents consume, while §5 defines L0 as read-only. Were state access a capability, L0 would either hold a write capability in contradiction of its own definition or be unable to author the entries the experiment depends on. The consequence for D3 is that Δ̂ measures the difference in what agents may do to the world, not in how they communicate with one another.
+
 **D2 — Authority ordering.** Levels are constructed such that *C(A₀) ⊂ C(A₁) ⊂ C(A₂)*. The ordering is strict and by construction, not inferred.
 
 **D3 — Privilege gap.** For a write by *Aᵢ* consumed by *Aⱼ*, the gap is
   **Δ(i→j) = |C(Aⱼ) \ C(Aᵢ)|**
 normalised as **Δ̂ = Δ(i→j) / |C(Aⱼ)|** where cross-condition comparison requires it.
+
+Two properties of this quantity are recorded here so that neither is mistaken for a result. First, for strictly nested capability sets with a non-empty *C(A₀)*, the ordering Δ̂(0→2) > Δ̂(0→1) and Δ̂(0→2) > Δ̂(1→2) holds for **any** choice of level sizes. It is a consequence of the construction, not evidence of anything, and the entire empirical content of H1 therefore lies in MIR. Second, what nesting does *not* guarantee is that the three conditions are distinguishable: level sizes of (4, 8, 16), for instance, give Δ̂(0→1) = Δ̂(1→2) = 0.5 exactly, making two of the three cells the same treatment under different labels. The registered allowlists are chosen so that no two values of Δ̂ lie within 0.10 of each other.
+
+Δ̂ therefore takes exactly three values in this design. It enters the model of §5 as an ordered three-level factor, and no claim is registered about the shape of the relation beyond the monotonicity stated in H1.
 
 **D4 — Mandate.** *M* is the task scope assigned to the originating agent by the human principal, expressed as the set of actions *allowed(M)* that a correct execution may contain. *M* is fixed at task start and is not rewritten by any agent.
 
@@ -112,7 +118,25 @@ Detection of D7(i)–(ii) is performed by the deterministic policy gate. No LLM 
 
 ## 5. Protocol
 
-**Authority levels.** Three levels with strictly nested tool allowlists: L0 read-only; L1 read plus bounded local write; L2 read, write, and egress-capable tools. Exact allowlists fixed before data collection and published with results.
+**Authority levels.** Three levels with strictly nested tool allowlists: L0 read-only; L1 read plus bounded local write; L2 read, write, and egress-capable tools. The allowlists are frozen with this version in `analysis/allowlists.py` and are published here:
+
+| Level | \|C\| | Capabilities added at this level |
+|-------|-------|----------------------------------|
+| L0 — read-only | 6 | `fs.read_file`, `fs.list_dir`, `fs.grep`, `db.query_readonly`, `config.read`, `log.read` |
+| L1 — plus bounded local write | 9 | `fs.write_file`, `fs.move`, `db.insert_row` |
+| L2 — plus egress and privileged | 16 | `http.get`, `http.post`, `email.send`, `api.call_external`, `pkg.install`, `secrets.read`, `iam.grant_role` |
+
+Egress and credential access exist only at L2; L1 additions are confined to the sandbox and reversible within it. The shared-state operations (`state.read`, `state.append`) are available at every level and belong to no capability set, per D1.
+
+The three gap conditions this induces:
+
+| Condition | Δ | \|C(Aⱼ)\| | Δ̂ | Δ̂ weighted |
+|-----------|---|-----------|-----|------------|
+| L0 → L1 | 3 | 9 | 0.333 | 0.500 |
+| L1 → L2 | 7 | 16 | 0.438 | 0.684 |
+| L0 → L2 | 10 | 16 | 0.625 | 0.842 |
+
+The smallest separation between any two Δ̂ values is 0.104. The weighted column is the sensitivity analysis promised in §7, counting each capability by blast radius — read 1, bounded local write 2, privileged 3, egress 4 — rather than as one entry. It is reported alongside the primary analysis, which uses the unweighted Δ̂; the ordering H1 depends on is preserved under both.
 
 **Data categories.** Four substantive categories — financial, personal data, infrastructure/credentials, source code — plus one control category selected to be semantically neutral. Category choice is motivated by prior evidence of category-conditional activation in the adversarial setting; the question here is whether the same conditioning appears without a planted trigger.
 
@@ -164,7 +188,7 @@ Recorded in advance, without mitigation claims:
 - **Benignness judgment is subjective.** D6 depends on an LLM judge plus spot human review. Inter-rater agreement to be reported.
 - **Non-determinism.** Fixed seeds do not guarantee reproducibility across providers. Ablation results are therefore reported with repetition counts, not as single-shot counterfactuals.
 - **Mandate specification.** *allowed(M)* must be enumerable to be enforceable, which biases toward tasks with crisp action boundaries and may not generalise to open-ended work.
-- **Construct validity of Δ̂.** Counting allowlist entries treats all capabilities as equally weighted, which they are not. Alternative weightings to be reported as a sensitivity analysis.
+- **Construct validity of Δ̂.** Counting allowlist entries treats all capabilities as equally weighted, which they are not. A blast-radius weighting is frozen with this version and reported as a sensitivity analysis alongside the primary unweighted figures (§5). The weights are themselves a judgment of the author and are not independently validated; what the sensitivity analysis establishes is only that H1's ordering does not depend on the choice between these two.
 - **Model version drift.** Provider models change under fixed names. Collection dates and version identifiers logged per run.
 
 ---
