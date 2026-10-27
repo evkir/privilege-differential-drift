@@ -18,7 +18,7 @@ identifiers:
     description: Concept DOI — all versions
   - type: doi
     value: 10.5281/zenodo.23513215
-    description: Version v0.1
+    description: Version v0.1 (superseded by v0.2)
 repository-code: 'https://github.com/evkir/privilege-differential-drift'
 url: 'https://doi.org/10.5281/zenodo.23513214'
 abstract: >-
@@ -29,7 +29,10 @@ abstract: >-
   benign in isolation and no adversary is present at any point in
   the chain. Defines the Mandate Inflation Rate (MIR), specifies a
   three-level experimental protocol across five data categories,
-  and pre-commits to falsification criteria. Contains no results.
+  and pre-commits to falsification criteria. Version 0.2 adds the
+  frozen task set, the tool allowlists defining the three authority
+  levels, and the power analysis, each published as executable code
+  under test. Contains no results.
 keywords:
   - LLM agents
   - multi-agent systems
@@ -39,5 +42,5 @@ keywords:
   - AI security
   - pre-registration
 license: CC-BY-4.0
-version: v0.1
-date-released: '2026-10-20'
+version: v0.2
+date-released: '2026-10-27'

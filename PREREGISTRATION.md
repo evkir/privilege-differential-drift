@@ -3,10 +3,10 @@
 **A pre-registration of hypotheses, metrics, and falsification criteria**
 
 **Author:** Evgeny Kiryak — MASec Lab (independent)
-**Version:** 0.1 (pre-registration; no results)
-**Date:** 2026-10-20
-**License:** CC BY 4.0
-**Status:** Hypotheses and protocol registered prior to data collection. Implementation and results withheld to a later version.
+**Version:** 0.2 (pre-registration; no results)
+**Date:** 2026-10-27 (v0.1: 2026-10-20)
+**License:** CC BY 4.0 for this document; code under the license stated in the repository.
+**Status:** Hypotheses, protocol, task set, allowlists and power analysis registered prior to data collection. Harness and results withheld to v1.0.
 
 ---
 
@@ -218,11 +218,13 @@ Should the hypothesis be confirmed, the finding describes a property of a common
 
 This document records the formulation, metric definitions, and falsification criteria as of the stated date. It contains no results.
 
-- **v0.1 (this version)** — hypotheses, metrics, protocol, falsification criteria.
-- **v0.2** — frozen task set, allowlists, power analysis, analysis script.
+- **v0.1** — hypotheses, metrics, protocol, falsification criteria. Superseded; remains citable at its own DOI.
+- **v0.2 (this version)** — frozen task set, allowlists, power analysis, analysis script.
 - **v1.0** — harness implementation, full logs, results, and either the finding or the null.
 
-Implementation details are deliberately withheld at v0.1. The registered contribution is the formulation and the metric, not the code.
+What v0.2 adds to the record, beyond the material named above: the sample size is resized against H2 rather than H1 and now accounts for the discard rate F4 permits; F2 is restated as an equivalence test, since a failure to reject is not evidence of no conditioning; model family moves from a random to a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. Four of these are revisions to v0.1, made before any data was collected and recorded here rather than silently.
+
+The harness is deliberately withheld at v0.2. The registered contribution is the formulation, the metric, and the design — not the implementation.
 
 ---
 
