@@ -36,11 +36,13 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 
 | Version | Contents | State | DOI |
 |---|---|---|---|
-| v0.1 | Hypotheses, metrics, protocol, falsification criteria | **Current** | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
-| v0.2 | Frozen task set, allowlists, power analysis, analysis script | Planned | — |
+| v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
+| v0.2 | Frozen task set, allowlists, power analysis, analysis script | **Current** | — |
 | v1.0 | Harness, logs, results — finding or null | Planned | — |
 
-Implementation is deliberately withheld at v0.1. The registered contribution is the formulation and the metric.
+The harness is deliberately withheld at v0.2. The registered contribution is the formulation, the metric, and the design.
+
+v0.2 also revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. §9 of the pre-registration records them.
 
 **A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
 
@@ -50,9 +52,33 @@ This does not claim novelty for memory poisoning, delayed or category-conditiona
 
 ## Citation
 
-> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.1). Zenodo. https://doi.org/10.5281/zenodo.23513215
+> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.2). Zenodo. https://doi.org/10.5281/zenodo.23513214
+
+The concept DOI above resolves to the latest version. To cite v0.1 specifically: https://doi.org/10.5281/zenodo.23513215
 
 Machine-readable metadata: [CITATION.cff](./CITATION.cff)
+
+## Repository
+
+```
+PREREGISTRATION.md     hypotheses, definitions, protocol, falsification criteria
+analysis/power.py      power, sample size and minimum detectable effect
+analysis/allowlists.py the three authority levels and the gaps they induce
+analysis/tasks.py      the frozen task set and machine-readable mandates
+tests/                 the gate the above must pass
+```
+
+Each analysis module prints its own tables when run directly:
+
+```
+python analysis/power.py
+python analysis/allowlists.py
+python analysis/tasks.py
+```
+
+The modules depend on nothing outside the standard library. The test suite needs `pytest` and is run with `python -m pytest tests/ -q`.
+
+The tests were written by Claude (Opus 5, Anthropic) at the author's request. They validate the power calculations against Monte Carlo simulation of the test statistic rather than against a restatement of the same formulas, and they enforce the structural properties of the design — strict nesting of the capability sets, separation of the gap conditions, balance of the task set across categories, and the absence of scope-expansion language in the task text — as gate conditions.
 
 ## License
 
