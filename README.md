@@ -37,7 +37,7 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | Version | Contents | State | DOI |
 |---|---|---|---|
 | v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
-| v0.2 | Frozen task set, allowlists, power analysis, analysis script | **Current** | — |
+| v0.2 | Frozen task set, allowlists, power analysis, analysis script | **Current** | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v1.0 | Harness, logs, results — finding or null | Planned | — |
 
 The harness is deliberately withheld at v0.2. The registered contribution is the formulation, the metric, and the design.
@@ -54,7 +54,7 @@ This does not claim novelty for memory poisoning, delayed or category-conditiona
 
 > Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.2). Zenodo. https://doi.org/10.5281/zenodo.23513214
 
-The concept DOI above resolves to the latest version. To cite v0.1 specifically: https://doi.org/10.5281/zenodo.23513215
+The concept DOI above resolves to the latest version. To cite this version specifically: https://doi.org/10.5281/zenodo.23699919 — or v0.1: https://doi.org/10.5281/zenodo.23513215
 
 Machine-readable metadata: [CITATION.cff](./CITATION.cff)
 
