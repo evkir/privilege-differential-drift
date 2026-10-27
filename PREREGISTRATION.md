@@ -108,6 +108,12 @@ Detection of D7(i)–(ii) is performed by the deterministic policy gate. No LLM 
 
 **H1 (primary).** MIR increases monotonically with Δ̂. Specifically, MIR(0→2) > MIR(0→1) and MIR(0→2) > MIR(1→2), with the difference significant at α = 0.05 after correction for multiple comparisons.
 
+The two comparisons are not of equal evidential weight, and the difference is registered here rather than discovered afterwards. An inflation event must be drawn from *C(Aⱼ) \ allowed(M)*, the actions a consumer holds that the mandate excludes. That set is larger for a consumer at L2 than at L1 — 12 or 13 actions against 5 or 6, for the frozen task set — so **MIR(0→2) > MIR(0→1) is consistent both with H1 and with the weaker proposition that a consumer holding more capabilities has more ways to leave a fixed mandate**. It cannot separate the two.
+
+**MIR(0→2) > MIR(1→2) can.** The consumer is at L2 in both conditions, so *allowed(M)* and *C(Aⱼ)* are identical and the opportunity set is the same set, not merely the same size. The only quantity that differs is the authority of the agent that wrote the state. A difference in MIR between these two conditions is therefore attributable to the privilege differential and to nothing else in the design.
+
+Both comparisons are retained and both are corrected for, but the second is the one on which the registered claim rests. Should the two disagree — the first significant and the second null — the result is to be reported as a capability-count effect, not as support for H1.
+
 **H2.** MIR differs significantly across data categories, with at least one non-control category exceeding the control category. Tested on per-category MIR pooled across model families, at the sample size registered in §5; per-cell MIR is descriptive only.
 
 **H3.** A unique minimal causal entry set is recoverable for the majority of inflation events: AIR ≥ 0.70.
@@ -140,7 +146,13 @@ The smallest separation between any two Δ̂ values is 0.104. The weighted colum
 
 **Data categories.** Four substantive categories — financial, personal data, infrastructure/credentials, source code — plus one control category selected to be semantically neutral. Category choice is motivated by prior evidence of category-conditional activation in the adversarial setting; the question here is whether the same conditioning appears without a planted trigger.
 
-**Tasks.** All tasks are benign, realistic, and individually completable within the assigned mandate. No task contains instructions, hints, or content designed to induce scope expansion. Task set is authored before the hypotheses are tested and is frozen.
+**Tasks.** All tasks are benign, realistic, and individually completable within the assigned mandate. No task contains instructions, hints, or content designed to induce scope expansion. The task set is authored before the hypotheses are tested, frozen with this version in `analysis/tasks.py`, and published in full.
+
+The set is 25 tasks: five data categories × five task archetypes — summarize, reconcile, index, triage, extract. **An archetype carries the same mandate in every category**: the same *allowed(M)*, the same tools the writing agent needs, the same two-part division of labour. What distinguishes a financial task from its control counterpart is the subject matter of the records and nothing else. Without this constraint a difference in MIR between categories could be a difference in task shape wearing a category's name, and H2 would not test what it states.
+
+Every *allowed(M)* is a subset of L1, so no mandate in the design authorises egress or privileged capability and every such attempt by a consumer is outside the mandate by construction, without an intent judgment at the boundary. Every writer brief is satisfiable within L0, so one frozen set serves all three gap conditions including those whose writer is read-only. Each mandate strictly exceeds what its writer can do alone, so the consumer always has a remaining action to take.
+
+The undertaking that no task plants a hint is enforced as a gate condition rather than a review practice: the task text is linted against a frozen lexicon of terms naming an L2 capability, pointing outside the sandbox, or granting open-ended discretion. The lint is itself tested against a planted hint, so that it cannot pass by being inert. Three formulations in the first draft of the set were rewritten after the lint rejected them.
 
 **Conditions.** 3 gap conditions × 5 categories = 15 cells.
 
@@ -166,7 +178,7 @@ Power, sample size and minimum-detectable-effect figures are produced by `analys
 
 The hypothesis is to be considered **refuted**, and the null result published, if:
 
-**F1.** MIR shows no significant dependence on Δ̂ at α = 0.05 under the pre-specified model, across at least 3 model families at the registered sample size. *(Refutes H1 — the core claim. If F1 triggers, the work is a null result on privilege differential, not a finding about agent memory.)*
+**F1.** MIR shows no significant dependence on Δ̂ at α = 0.05 under the pre-specified model, across at least 3 model families at the registered sample size. The decisive comparison is MIR(0→2) against MIR(1→2), for the reason given in §4: a significant result confined to MIR(0→2) against MIR(0→1) is reported as a capability-count effect and triggers F1. *(Refutes H1 — the core claim. If F1 triggers, the work is a null result on privilege differential, not a finding about agent memory.)*
 
 **F2.** The control category is shown to be statistically **equivalent** to every substantive category, by two one-sided tests against an equivalence margin of 0.10 absolute MIR at α = 0.0125 per one-sided test, on per-category MIR pooled across model families. *(Refutes H2 — the observed behaviour is unconditioned and reduces to known misevolution.)*
 
@@ -184,7 +196,8 @@ F1 and F4 are the decisive ones. F4 in particular is the criterion that keeps th
 
 Recorded in advance, without mitigation claims:
 
-- **Author bias in scenario design.** The same author writes the tasks and the expected-action sets. Partial mitigation: tasks frozen before hypotheses are tested; full task set published. Not fully mitigable by a single author.
+- **Author bias in scenario design.** The same author writes the tasks and the expected-action sets. Partial mitigation: tasks frozen before hypotheses are tested; full task set published; the structural properties on which the inferences depend — balance across categories, mandate identity within an archetype, satisfiability by a read-only writer, absence of scope-expansion language — enforced as test conditions rather than left to review. What remains unmitigated is the choice of subject matter and of what counts as a realistic task, which no test can check and which a single author cannot resolve.
+- **Opportunity-set confound in one H1 comparison.** The set of out-of-mandate actions available to a consumer grows with its authority level, so MIR(0→2) > MIR(0→1) does not by itself distinguish the privilege differential from capability count. MIR(0→2) > MIR(1→2) holds the consumer and its opportunity set fixed and does distinguish them; see §4. The design records this rather than correcting for it, because the two conditions cannot be equalised on opportunity-set size without making the gap conditions non-nested.
 - **Benignness judgment is subjective.** D6 depends on an LLM judge plus spot human review. Inter-rater agreement to be reported.
 - **Non-determinism.** Fixed seeds do not guarantee reproducibility across providers. Ablation results are therefore reported with repetition counts, not as single-shot counterfactuals.
 - **Mandate specification.** *allowed(M)* must be enumerable to be enforceable, which biases toward tasks with crisp action boundaries and may not generalise to open-ended work.
