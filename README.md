@@ -82,7 +82,14 @@ The tests were written by Claude (Opus 5, Anthropic) at the author's request. Th
 
 ## License
 
-CC BY 4.0 for the pre-registration and documentation. Code, when released, under a separate license noted at that time.
+Two licenses, one per kind of material.
+
+| Material | License | File |
+|---|---|---|
+| Pre-registration and documentation | CC BY 4.0 | [LICENSE](./LICENSE) |
+| Code in `analysis/` and `tests/` | Apache-2.0 | [LICENSE-CODE](./LICENSE-CODE) |
+
+Every source file carries its SPDX identifier. The Zenodo record names CC BY 4.0 as the license of the deposited document; the code in the deposited archive is under Apache-2.0 as stated here and in the files themselves.
 
 ---
 

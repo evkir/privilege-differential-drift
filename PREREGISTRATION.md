@@ -5,7 +5,7 @@
 **Author:** Evgeny Kiryak — MASec Lab (independent)
 **Version:** 0.2 (pre-registration; no results)
 **Date:** 2026-10-27 (v0.1: 2026-10-20)
-**License:** CC BY 4.0 for this document; code under the license stated in the repository.
+**License:** CC BY 4.0 for this document (`LICENSE`); Apache-2.0 for the code in `analysis/` and `tests/` (`LICENSE-CODE`).
 **Status:** Hypotheses, protocol, task set, allowlists and power analysis registered prior to data collection. Harness and results withheld to v1.0.
 
 ---

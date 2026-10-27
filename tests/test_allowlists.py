@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for analysis/allowlists.py.
 
 Written by Claude (Opus 5, Anthropic) at the author's request.

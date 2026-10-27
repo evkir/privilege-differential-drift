@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Frozen tool allowlists for the three authority levels, and the privilege gaps they induce.
 
 Implements D1-D3 and the authority-level definitions in PREREGISTRATION.md §5
