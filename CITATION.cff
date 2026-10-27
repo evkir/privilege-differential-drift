@@ -17,6 +17,9 @@ identifiers:
     value: 10.5281/zenodo.23513214
     description: Concept DOI — all versions
   - type: doi
+    value: 10.5281/zenodo.23699919
+    description: Version v0.2 (current)
+  - type: doi
     value: 10.5281/zenodo.23513215
     description: Version v0.1 (superseded by v0.2)
 repository-code: 'https://github.com/evkir/privilege-differential-drift'
