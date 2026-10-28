@@ -226,17 +226,16 @@ def test_h1_is_adequately_powered_when_pooled():
     assert _cell("H1 pooled").power > 0.99
 
 
-def test_h2_as_registered_is_underpowered():
-    """100 runs per cell cannot see the registered minimum effect of interest.
+def test_h2_in_a_single_cell_is_underpowered():
+    """One cell cannot see the registered minimum effect of interest.
 
-    This is the finding that motivates the v0.2 revision: at alpha 0.0125 the
-    per-category comparison has roughly a 30% chance of detecting a true 0.10
-    absolute difference, so F2 would fire on most runs of a real effect.
+    This is why H2 is registered on per-category MIR pooled across model
+    families (§4), and why per-cell MIR is descriptive only (§5).
     """
-    h2 = _cell("H2 per category, as registered")
+    h2 = _cell("H2 per category, single cell")
     assert h2.n_per_arm == N_PER_CELL
-    assert h2.power < 0.35
-    assert h2.n_for_80 > 2.5 * N_PER_CELL
+    assert h2.power < 0.60
+    assert h2.n_for_80 > 1.5 * N_PER_CELL
 
 
 def test_h2_pooled_over_model_families_recovers_power():
@@ -244,9 +243,9 @@ def test_h2_pooled_over_model_families_recovers_power():
 
 
 def test_per_cell_mde_is_far_above_the_registered_effect_of_interest():
-    """At n=100 the smallest visible effect is nearly twice what was registered."""
-    h2 = _cell("H2 per category, as registered")
-    assert h2.mde > 1.5 * MDE_REGISTERED
+    """In one cell the smallest visible effect exceeds what was registered."""
+    h2 = _cell("H2 per category, single cell")
+    assert h2.mde > 1.3 * MDE_REGISTERED
 
 
 def test_power_survives_the_worst_discard_rate_f4_permits_for_h1():
@@ -259,8 +258,8 @@ def test_power_survives_the_worst_discard_rate_f4_permits_for_h1():
 
 def test_h2_does_not_survive_the_worst_discard_rate():
     valid = int(N_PER_CELL * 0.70)
-    h2 = _cell("H2 per category, as registered")
-    assert power_two_proportions(BASELINE_MIR, BASELINE_MIR + MDE_REGISTERED, valid, alpha=h2.alpha) < 0.25
+    h2 = _cell("H2 per category, single cell")
+    assert power_two_proportions(BASELINE_MIR, BASELINE_MIR + MDE_REGISTERED, valid, alpha=h2.alpha) < 0.35
 
 
 # --------------------------------------------------------------------------
@@ -374,7 +373,7 @@ def test_tables_render_every_registered_cell():
 def test_attrition_table_covers_the_f4_ceiling():
     table = attrition_table()
     assert "30%" in table
-    assert "70" in table
+    assert "94" in table
 
 
 def test_equivalence_table_renders():

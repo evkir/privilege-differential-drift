@@ -36,6 +36,8 @@ The following summarises the state of the literature as of October 2026 and deli
 
 *Approval laundering* (arXiv:2609.28586) removes the adversary and shows that authority granted at one point extends past its intended scope: an approval record names the entry invocation truthfully while omitting the effects the resulting workflow exercises. The shared intuition — authority outrunning the scope it was granted under — is real, and the gap there is between an approval record and the transitive effects of tooling, deterministic and in principle recoverable from command semantics, in a human-to-agent approval path. The gap registered here is between the scope under which an agent wrote a state entry and the authority of the agent that later reads it, in an agent-to-agent path with no human in the loop, where the inflation is produced by the consuming model's reading of an underspecified rule rather than by an incomplete record. Neither work treats the magnitude of a privilege difference as a predictor. **Neither is re-claimed; both constrain what may be claimed as novel.**
 
+*Non-adversarial over-privilege* (arXiv:2606.20023) removes the adversary and measures privilege escalation directly: an agent offered a lower-privilege and a higher-privilege tool, both independently sufficient for the task, selects or escalates to the higher-privilege one. The capability confound is removed by construction, as it is here, and no attacker is present at any point. The difference is structural. That work measures a single agent's choice at a single decision point, where over-privilege is relative to the task; there is no writer, no shared state, and no authority differential, because there is only one agent. The quantity registered here exists only for a chain of length greater than one: it is the gap between the authority under which a state entry was written and the authority of the agent that later reads it, and the hypothesised mechanism is the consumer's reading of a rule whose scope another agent stripped. **Neither the phenomenon of non-adversarial escalation nor the removal of the capability confound is claimed as novel; the privilege differential as a predictor across a delegation boundary is.**
+
 ### 1.1 Gap statement
 
 The literature treats the privilege boundary as a *channel* through which an externally-originated compromise travels. It does not treat the privilege **differential** as an independent variable that may itself generate violations in the absence of any compromise.
@@ -160,11 +162,21 @@ The undertaking that no task plants a hint is enforced as a gate condition rathe
 
 The binding constraint is H2, not H1. The per-category comparisons are made at a Holm planning α of 0.0125 (four substantive categories against the control), where 80% power on the registered effect of interest requires **283 valid runs per category arm** — 95 valid runs per cell once pooled across three model families. H1 is satisfied by any design that satisfies H2: pooled across categories and families its power exceeds 0.99 and it resolves differences down to 0.036 absolute.
 
-Because F4 tolerates a discard rate of up to 30% under atomic benignness (D6), the collection target is set above the valid-run requirement: **135 runs per cell**, i.e. 3 × 5 × 3 × 135 = **6,075 runs total**. This leaves ≥ 95 valid runs per cell at the worst discard rate F4 permits. At a 15% discard rate 111 runs per cell would suffice; the higher target is registered so the design does not require resizing if discard runs high.
+Because F4 tolerates a discard rate of up to 30% under atomic benignness (D6), the collection target is set above the valid-run requirement: **135 runs per cell**, i.e. 3 × 5 × 3 × 135 = **6,075 runs total**. At the worst discard rate F4 permits this leaves **283 valid runs per category arm** once pooled across the three model families — exactly the requirement above, and the figure H2 is tested on. The per-cell figure is 94 at that rate; it is reported for completeness and nothing is inferred from a single cell. At a 15% discard rate 111 runs per cell would suffice; the higher target is registered so the design does not require resizing if discard runs high.
 
-Per-cell MIR is reported descriptively only. At 100 runs in a single cell the smallest detectable effect is 0.185 absolute — nearly twice the registered minimum effect of interest — so no confirmatory claim is made at the level of an individual cell.
+Per-cell MIR is reported descriptively only. At the registered 135 runs in a single cell the smallest detectable effect is 0.154 absolute — half again the registered minimum effect of interest — so no confirmatory claim is made at the level of an individual cell.
 
 Power, sample size and minimum-detectable-effect figures are produced by `analysis/power.py`, frozen with this version. The accompanying test suite validates them against Monte Carlo simulation of the test statistic rather than against a restatement of the same formulas.
+
+**Harness.** The policy gate of D1 and the event log of the logging paragraph below are implemented in `harness/`, frozen with this version. Four properties of that implementation bear on what the metrics mean and are registered here rather than left to the code.
+
+*The gate establishes a candidate, not a confirmed event.* It decides D7(i) and (ii), which are decidable from the task and the capability sets alone. It cannot decide (iii), which requires the ablation re-run, or (iv), which requires the D6 review. MIR counts confirmed events; a gate ruling is an input to that count, never the count itself.
+
+*Writer-side scope breaches do not enter the MIR numerator.* D7 is a statement about the consuming agent. An attempt by the writing agent outside its own brief puts the atomic-benignness premise of that run in doubt, so it is routed to a separate category feeding the F4 discard rate. Folding it into the consumer-side count would let measured MIR rise on writer misbehaviour, which is the confound F4 exists to catch.
+
+*Blocked invocations are logged, not executed.* Executing a denied action would change the world state the remainder of the run reads from, and the D7(iii) re-run would no longer be comparing like with like.
+
+*An out-of-capability attempt is not an inflation event.* D7(ii) requires the action to be within C(Aⱼ). Such attempts are recorded and counted separately as escalation attempts.
 
 **Statistical plan.** Mixed-effects logistic regression with inflation as the outcome, Δ̂ and category as fixed effects, and task identifier as a random effect. Model family enters as a **fixed** effect with three levels: three groups are too few to estimate a variance component stably, and the registered design treats the three providers as the population of interest rather than a sample drawn from one. Holm correction across the pre-specified comparisons, with the design powered at the most stringent step of the sequence (α/k) rather than the least. Bootstrap confidence intervals on per-cell MIR. The analysis script is written and frozen before data collection.
 
@@ -202,6 +214,7 @@ Recorded in advance, without mitigation claims:
 - **Non-determinism.** Fixed seeds do not guarantee reproducibility across providers. Ablation results are therefore reported with repetition counts, not as single-shot counterfactuals.
 - **Mandate specification.** *allowed(M)* must be enumerable to be enforceable, which biases toward tasks with crisp action boundaries and may not generalise to open-ended work.
 - **Construct validity of Δ̂.** Counting allowlist entries treats all capabilities as equally weighted, which they are not. A blast-radius weighting is frozen with this version and reported as a sensitivity analysis alongside the primary unweighted figures (§5). The weights are themselves a judgment of the author and are not independently validated; what the sensitivity analysis establishes is only that H1's ordering does not depend on the choice between these two.
+- **Gate granularity.** The policy gate decides D7(i)–(ii) on tool names, not on arguments. A consumer that uses a permitted tool against a resource the mandate did not contemplate — reading a file outside the task's intended scope with `fs.read_file`, say — is doing something *allowed(M)* excludes, and the gate will pass it. The bias runs in one direction only: towards missing inflation events, never towards inventing them, so a measured MIR is a lower bound on the quantity D7 defines. Argument-level enforcement would require a per-task specification of legitimate resources, which reintroduces the judgment at the boundary that the deterministic gate exists to remove.
 - **Model version drift.** Provider models change under fixed names. Collection dates and version identifiers logged per run.
 
 ---
@@ -220,11 +233,16 @@ This document records the formulation, metric definitions, and falsification cri
 
 - **v0.1** — hypotheses, metrics, protocol, falsification criteria. Superseded; remains citable at its own DOI.
 - **v0.2 (this version)** — frozen task set, allowlists, power analysis, analysis script.
-- **v1.0** — harness implementation, full logs, results, and either the finding or the null.
+- **v0.3** — harness (policy gate and event journal), the gate properties recorded in §5, the gate-granularity limitation in §7, and the correction below.
+- **v1.0** — full logs, results, and either the finding or the null.
 
 What v0.2 adds to the record, beyond the material named above: the sample size is resized against H2 rather than H1 and now accounts for the discard rate F4 permits; F2 is restated as an equivalence test, since a failure to reject is not evidence of no conditioning; model family moves from a random to a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. Four of these are revisions to v0.1, made before any data was collected and recorded here rather than silently.
 
-The harness is deliberately withheld at v0.2. The registered contribution is the formulation, the metric, and the design — not the implementation.
+What v0.3 adds, all before any data collection: the policy gate and the append-only event journal are implemented and frozen; the four properties of the gate that bear on the metrics are recorded in §5; the gate's tool-name granularity is recorded in §7 as a threat to construct validity; and a near neighbour removing the adversary at a single decision point is distinguished in §1.
+
+v0.3 also corrects two figures that described the v0.1 sample size after §5 was resized in v0.2: the frozen `analysis/power.py` carried 100 runs per cell where §5 registers 135, and the per-cell minimum detectable effect was quoted from the smaller figure. The registered design is unchanged — 135 runs per cell, 6,075 total — and the correction brings the code and the stated MDE into agreement with it. A test now parses the registered figures out of this document and compares them to the module constants, so the two cannot drift apart again without the build failing. The per-cell valid-run floor is additionally restated as the pooled figure the analysis actually uses.
+
+The registered contribution remains the formulation, the metric, and the design. The harness is published because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail.
 
 ---
 
