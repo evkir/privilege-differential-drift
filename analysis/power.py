@@ -59,8 +59,10 @@ _N = NormalDist()
 BASELINE_MIR = 0.10
 #: Minimum effect of interest, absolute difference in MIR, §5.
 MDE_REGISTERED = 0.10
-#: Registered runs per cell, §5.
-N_PER_CELL = 100
+#: Registered collection target per cell, §5.
+N_PER_CELL = 135
+#: Discard rate F4 tolerates under atomic benignness (D6), §6.
+DISCARD_CEILING = 0.30
 #: Substantive + control data categories, §5.
 N_CATEGORIES = 5
 #: Minimum model families from distinct providers, §5.
@@ -343,12 +345,16 @@ REGISTERED_DESIGN: tuple[Cell, ...] = (
         "H1", N_PER_CELL, H1_COMPARISONS,
     ),
     Cell(
-        "H2 per category, as registered",
+        "H2 per category, single cell (descriptive only)",
         "H2", N_PER_CELL, H2_COMPARISONS,
     ),
     Cell(
         "H2 per category, pooled over model families",
         "H2", N_PER_CELL * N_MODEL_FAMILIES, H2_COMPARISONS,
+    ),
+    Cell(
+        "H2 per category, pooled, at the F4 discard ceiling",
+        "H2", int(N_PER_CELL * N_MODEL_FAMILIES * (1.0 - DISCARD_CEILING)), H2_COMPARISONS,
     ),
 )
 
@@ -378,10 +384,10 @@ def attrition_table(discard_rates: tuple[float, ...] = (0.0, 0.15, 0.30)) -> str
     """Power after runs are discarded under atomic benignness (D6).
 
     F4 permits a discard rate up to 30% before the premise is considered failed,
-    so the design has to hold at 70 valid runs per cell, not 100.
+    so the design has to hold at the discounted figure, not the collection target.
     """
     h1 = next(c for c in REGISTERED_DESIGN if c.label.startswith("H1 pooled"))
-    h2 = next(c for c in REGISTERED_DESIGN if c.label.startswith("H2 per category, as"))
+    h2 = next(c for c in REGISTERED_DESIGN if c.label.startswith("H2 per category, single cell"))
     header = f"{'discard':>8s} {'valid/cell':>11s} {'H1 pooled':>10s} {'H2 per cell':>12s}"
     lines = [header, "-" * len(header)]
     for rate in discard_rates:
