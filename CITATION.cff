@@ -17,8 +17,11 @@ identifiers:
     value: 10.5281/zenodo.23513214
     description: Concept DOI — all versions
   - type: doi
+    value: 10.5281/zenodo.23724565
+    description: Version v0.3 (current)
+  - type: doi
     value: 10.5281/zenodo.23699919
-    description: Version v0.2 (current)
+    description: Version v0.2 (superseded by v0.3)
   - type: doi
     value: 10.5281/zenodo.23513215
     description: Version v0.1 (superseded by v0.2)
@@ -35,7 +38,10 @@ abstract: >-
   and pre-commits to falsification criteria. Version 0.2 adds the
   frozen task set, the tool allowlists defining the three authority
   levels, and the power analysis, each published as executable code
-  under test. Contains no results.
+  under test. Version 0.3 adds the deterministic policy gate and the
+  append-only, hash-chained event journal, and registers the four
+  properties of the gate that determine what the metric counts.
+  Contains no results.
 keywords:
   - LLM agents
   - multi-agent systems
@@ -47,5 +53,5 @@ keywords:
 license:
   - CC-BY-4.0
   - Apache-2.0
-version: v0.2
-date-released: '2026-10-27'
+version: v0.3
+date-released: '2026-10-28'
