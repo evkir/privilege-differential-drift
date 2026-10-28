@@ -37,12 +37,15 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | Version | Contents | State | DOI |
 |---|---|---|---|
 | v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
-| v0.2 | Frozen task set, allowlists, power analysis, analysis script | **Current** | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
-| v1.0 | Harness, logs, results — finding or null | Planned | — |
+| v0.2 | Frozen task set, allowlists, power analysis, analysis script | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
+| v0.3 | Policy gate and event journal, gate properties registered | **Current** | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
+| v1.0 | Logs, results — finding or null | Planned | — |
 
-The harness is deliberately withheld at v0.2. The registered contribution is the formulation, the metric, and the design.
+The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. What is still withheld to v1.0 is the run executor, the ablation search strategy, and the benignness review.
 
-v0.2 also revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. §9 of the pre-registration records them.
+v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
+
+v0.3 registers four properties of the policy gate that determine what the metric counts, records the gate's tool-name granularity as a threat to construct validity, and corrects two figures that still described the v0.1 sample size. §9 of the pre-registration records both sets of revisions.
 
 **A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
 
@@ -52,9 +55,9 @@ This does not claim novelty for memory poisoning, delayed or category-conditiona
 
 ## Citation
 
-> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.2). Zenodo. https://doi.org/10.5281/zenodo.23513214
+> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.3). Zenodo. https://doi.org/10.5281/zenodo.23513214
 
-The concept DOI above resolves to the latest version. To cite this version specifically: https://doi.org/10.5281/zenodo.23699919 — or v0.1: https://doi.org/10.5281/zenodo.23513215
+The concept DOI above resolves to the latest version. To cite this version specifically: https://doi.org/10.5281/zenodo.23724565 — or v0.2: https://doi.org/10.5281/zenodo.23699919 — or v0.1: https://doi.org/10.5281/zenodo.23513215
 
 Machine-readable metadata: [CITATION.cff](./CITATION.cff)
 
@@ -65,6 +68,8 @@ PREREGISTRATION.md     hypotheses, definitions, protocol, falsification criteria
 analysis/power.py      power, sample size and minimum detectable effect
 analysis/allowlists.py the three authority levels and the gaps they induce
 analysis/tasks.py      the frozen task set and machine-readable mandates
+harness/journal.py     append-only, hash-chained event log of every run
+harness/gate.py        deterministic policy gate; decides D7(i)-(ii)
 tests/                 the gate the above must pass
 ```
 
@@ -78,6 +83,8 @@ python analysis/tasks.py
 
 The modules depend on nothing outside the standard library. The test suite needs `pytest` and is run with `python -m pytest tests/ -q`.
 
+The harness decides the primary metric, so two of its properties are worth stating here. The journal commits to the *ordering* of events, not only their content, and excludes the run identifier and timestamps from the chain — an ablation re-run is a different run with different timestamps, and the comparison that decides causality must not depend on either. The gate establishes a *candidate* inflation event only: it decides the two conditions that follow from the task and the capability sets, and leaves causality and benignness to the ablation procedure and the review.
+
 The tests were written by Claude (Opus 5, Anthropic) at the author's request. They validate the power calculations against Monte Carlo simulation of the test statistic rather than against a restatement of the same formulas, and they enforce the structural properties of the design — strict nesting of the capability sets, separation of the gap conditions, balance of the task set across categories, and the absence of scope-expansion language in the task text — as gate conditions.
 
 ## License
@@ -87,7 +94,7 @@ Two licenses, one per kind of material.
 | Material | License | File |
 |---|---|---|
 | Pre-registration and documentation | CC BY 4.0 | [LICENSE](./LICENSE) |
-| Code in `analysis/` and `tests/` | Apache-2.0 | [LICENSE-CODE](./LICENSE-CODE) |
+| Code in `analysis/`, `harness/` and `tests/` | Apache-2.0 | [LICENSE-CODE](./LICENSE-CODE) |
 
 Every source file carries its SPDX identifier. The Zenodo record names CC BY 4.0 as the license of the deposited document; the code in the deposited archive is under Apache-2.0 as stated here and in the files themselves.
 

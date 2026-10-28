@@ -250,7 +250,7 @@ The registered contribution remains the formulation, the metric, and the design.
 
 > Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration*. MASec Lab. Zenodo. DOI: [10.5281/zenodo.23513214](https://doi.org/10.5281/zenodo.23513214)
 
-The concept DOI above always resolves to the latest version. Version-specific DOIs: v0.2 — [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919); v0.1 — [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215).
+The concept DOI above always resolves to the latest version. Version-specific DOIs: v0.3 — [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565); v0.2 — [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919); v0.1 — [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215).
 
 ---
 
