@@ -1,0 +1,33 @@
+# Lint configuration, pinned rather than inherited.
+#
+# Every other artifact in this repository is frozen with the version that
+# registers it: the allowlists, the task set, the power analysis, the gate, the
+# journal, the analysis script. The lint rules were not, and they are the one
+# thing here that was arriving from outside and changing on its own.
+#
+# The consequence was not hypothetical. The code was written and frozen when
+# ruff's default selection was E4, E7, E9 and F. A later release widened that
+# default, and the deposited sources — unchanged, byte for byte, since their
+# DOI was issued — began reporting dozens of findings. Anyone checking out the
+# v0.3 archive and running `ruff check .` would see a repository that looks
+# unmaintained, on code that passed its gate on the day it was deposited.
+#
+# So the selection below is the one this repository was built against, stated
+# explicitly. It is not a judgment that the newer rules are wrong; several of
+# them are worth adopting. It is a statement that the rule set a frozen
+# artifact is judged by should change when someone decides to change it, in a
+# commit, and not when a tool updates.
+#
+# Adopting more rules later is a deliberate change: widen `select`, fix what it
+# finds, and do it in a commit of its own so the diff is reviewable as a
+# tooling change rather than mixed into a change of the design.
+#
+# Formatting is deliberately not gated. `ruff format` has never been run across
+# this repository, its output style also moves between releases, and running it
+# now would rewrite deposited files for whitespace. If a single style is wanted
+# it belongs in its own mechanical pass, recorded as whitespace-only.
+
+target-version = "py312"
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
