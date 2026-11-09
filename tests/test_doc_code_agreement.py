@@ -29,14 +29,23 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "analysis"))
 
+from model import (  # noqa: E402
+    AIR_F3_THRESHOLD,
+    AIR_H3_THRESHOLD,
+    ALPHA_FAMILY,
+    EQUIVALENCE_MARGIN,
+    QUADRATURE_NODES,
+)
 from power import (  # noqa: E402
     BASELINE_MIR,
     DISCARD_CEILING,
+    H2_COMPARISONS,
     MDE_REGISTERED,
     N_CATEGORIES,
     N_MODEL_FAMILIES,
     N_PER_CELL,
     REGISTERED_DESIGN,
+    holm_planning_alpha,
 )
 
 DOC = pathlib.Path(__file__).resolve().parents[1] / "PREREGISTRATION.md"
@@ -122,3 +131,95 @@ def test_no_row_claims_to_be_the_registered_h2_analysis_at_one_cell() -> None:
             assert "as registered" not in cell.label, (
                 f"row {cell.label!r} reports a single cell but is labelled as the registered analysis"
             )
+# ---------------------------------------------------------------------------
+# Artifacts, not only figures
+#
+# Every test above compares a registered number against a module constant. None
+# of them can notice that a module the document registers does not exist, which
+# is how §9 came to claim an analysis script that was in no deposit. The tests
+# below close that class: a source file named in the document has to be there,
+# and the script §5 registers has to expose what §5 says it computes.
+# ---------------------------------------------------------------------------
+
+ROOT = DOC.parent
+
+_SOURCE_REFERENCE = re.compile(r"`([A-Za-z0-9_][A-Za-z0-9_./-]*\.py)`")
+_DIRECTORY_REFERENCE = re.compile(r"`([A-Za-z0-9_][A-Za-z0-9_/-]*/)`")
+
+
+def test_every_source_file_the_document_names_exists() -> None:
+    """A file registered in prose has to be a file in the repository.
+
+    For a module this file imports, a missing file fails collection before the
+    assertion below is reached, and the import error names it. This test is
+    here for the rest: a module the document registers that nothing imports is
+    exactly how an artifact comes to be registered without existing.
+    """
+    named = sorted(set(_SOURCE_REFERENCE.findall(_doc())))
+    assert named, "no source file is named in the document; the pattern has stopped matching"
+    missing = [path for path in named if not (ROOT / path).is_file()]
+    assert not missing, (
+        f"the document registers {missing} as frozen material, and no such file exists"
+    )
+
+
+def test_every_directory_the_document_names_exists() -> None:
+    named = sorted(set(_DIRECTORY_REFERENCE.findall(_doc())))
+    missing = [path for path in named if not (ROOT / path).is_dir()]
+    assert not missing, f"the document names {missing}, and no such directory exists"
+
+
+def test_the_registered_analysis_script_computes_what_section_5_registers() -> None:
+    """§5 names an analysis script; this checks it is one, not just a file.
+
+    The entry points below are the registered statistical plan taken apart: the
+    fit, the two pre-specified comparison families, the multiplicity correction,
+    the interval, the equivalence test F2 is stated as, and the §6 verdict. A
+    stub satisfying the existence test above would not satisfy this one.
+    """
+    import model
+
+    for entry_point in (
+        "fit_random_intercept_logit",
+        "h1_contrasts",
+        "h2_contrasts",
+        "holm",
+        "bootstrap_cell_ci",
+        "tost_equivalence",
+        "evaluate_falsification",
+    ):
+        assert hasattr(model, entry_point), (
+            f"analysis/model.py does not provide {entry_point}, which §5 registers"
+        )
+
+
+def test_quadrature_node_count_matches() -> None:
+    nodes = int(_one(r"quadrature at (\d+) nodes", "quadrature nodes"))
+    assert QUADRATURE_NODES == nodes, (
+        f"§5 registers {nodes} quadrature nodes; analysis/model.py uses {QUADRATURE_NODES}"
+    )
+
+
+def test_equivalence_margin_matches_f2() -> None:
+    margin = float(_one(r"equivalence margin of (0\.\d+) absolute MIR", "F2 margin"))
+    assert EQUIVALENCE_MARGIN == margin
+    assert EQUIVALENCE_MARGIN == MDE_REGISTERED, (
+        "§6 states the margin is the minimum effect of interest; the constants disagree"
+    )
+
+
+def test_f2_one_sided_alpha_matches_the_holm_planning_alpha() -> None:
+    quoted = float(_one(r"α = (0\.0125) per one-sided test", "F2 one-sided alpha"))
+    assert holm_planning_alpha(ALPHA_FAMILY, H2_COMPARISONS) == quoted
+
+
+def test_family_alpha_matches_everywhere_it_is_stated() -> None:
+    stated = {float(value) for value in re.findall(r"α = (0\.05)\b", _doc())}
+    assert stated == {ALPHA_FAMILY}, (
+        f"the document states a family-wise alpha of {stated}; the module uses {ALPHA_FAMILY}"
+    )
+
+
+def test_air_thresholds_match() -> None:
+    assert AIR_H3_THRESHOLD == float(_one(r"AIR ≥ (0\.\d+)", "H3 attribution threshold"))
+    assert AIR_F3_THRESHOLD == float(_one(r"AIR < (0\.\d+)", "F3 attribution threshold"))
