@@ -39,7 +39,7 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
-| v0.4 | Analysis script and the estimator it is computed with | **Current, not yet deposited** | — |
+| v0.4 | Analysis script and the estimator it is computed with | **Current** | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
 The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. What is still withheld to v1.0 is the run executor, the ablation search strategy, and the benignness review.
@@ -58,11 +58,13 @@ This does not claim novelty for memory poisoning, delayed or category-conditiona
 
 ## Citation
 
-> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.3). Zenodo. https://doi.org/10.5281/zenodo.23513214
+> Kiryak, E. (2026). *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration* (v0.4). Zenodo. https://doi.org/10.5281/zenodo.23513214
 
-The concept DOI above resolves to the latest version. To cite this version specifically: https://doi.org/10.5281/zenodo.23724565 — or v0.2: https://doi.org/10.5281/zenodo.23699919 — or v0.1: https://doi.org/10.5281/zenodo.23513215
+The concept DOI above resolves to the latest version. To cite this version specifically: https://doi.org/10.5281/zenodo.24080308 — or v0.3: https://doi.org/10.5281/zenodo.23724565 — or v0.2: https://doi.org/10.5281/zenodo.23699919 — or v0.1: https://doi.org/10.5281/zenodo.23513215
 
 Machine-readable metadata: [CITATION.cff](./CITATION.cff)
+
+That file is current in this repository. Inside a deposited archive it is not: the DOI of a version is issued when that version is deposited, which is after its archive has been built, so the `CITATION.cff` packaged with version N names version N−1 as current. The concept DOI above is the one that always resolves correctly, and it is the one to cite.
 
 ## Repository
 

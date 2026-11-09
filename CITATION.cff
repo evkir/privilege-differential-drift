@@ -17,8 +17,11 @@ identifiers:
     value: 10.5281/zenodo.23513214
     description: Concept DOI — all versions
   - type: doi
+    value: 10.5281/zenodo.24080308
+    description: Version v0.4 (current)
+  - type: doi
     value: 10.5281/zenodo.23724565
-    description: Version v0.3 (current)
+    description: Version v0.3 (superseded by v0.4)
   - type: doi
     value: 10.5281/zenodo.23699919
     description: Version v0.2 (superseded by v0.3)
@@ -41,6 +44,10 @@ abstract: >-
   under test. Version 0.3 adds the deterministic policy gate and the
   append-only, hash-chained event journal, and registers the four
   properties of the gate that determine what the metric counts.
+  Version 0.4 adds the analysis script the statistical plan
+  registers and the estimator it is computed with, together with
+  the checks that estimator must pass before collection and the
+  independent refit reported beside the result.
   Contains no results.
 keywords:
   - LLM agents
@@ -53,5 +60,5 @@ keywords:
 license:
   - CC-BY-4.0
   - Apache-2.0
-version: v0.3
-date-released: '2026-10-28'
+version: v0.4
+date-released: '2026-11-09'
