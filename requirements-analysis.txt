@@ -1,0 +1,21 @@
+# Dependencies of analysis/model.py and tests/test_model.py.
+#
+# Everything else in this repository is standard library only, and stays that
+# way: analysis/allowlists.py, analysis/power.py, analysis/tasks.py and the
+# whole of harness/ are part of the registered design and must be readable and
+# runnable without installing anything.
+#
+# analysis/model.py is the single exception. The registered statistical plan of
+# §5 is a frequentist random-intercept logistic regression with Wald inference
+# on pre-specified contrasts; no Python library provides one, so the estimator
+# is implemented here over numpy and scipy rather than the model being changed
+# to suit what a library offers. §9 records that decision.
+#
+# Floors, not exact pins: the exact versions used to produce the published
+# analysis are logged with the results, per §5. numpy 2.0 is the floor because
+# the test suite integrates with `numpy.trapezoid`.
+#
+# Validated against numpy 2.5.3 and scipy 1.18.1 on Python 3.13.
+
+numpy>=2.0
+scipy>=1.11
