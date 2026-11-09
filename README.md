@@ -37,15 +37,18 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | Version | Contents | State | DOI |
 |---|---|---|---|
 | v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
-| v0.2 | Frozen task set, allowlists, power analysis, analysis script | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
-| v0.3 | Policy gate and event journal, gate properties registered | **Current** | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
+| v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
+| v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
+| v0.4 | Analysis script and the estimator it is computed with | **Current, not yet deposited** | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
 The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. What is still withheld to v1.0 is the run executor, the ablation search strategy, and the benignness review.
 
 v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
 
-v0.3 registers four properties of the policy gate that determine what the metric counts, records the gate's tool-name granularity as a threat to construct validity, and corrects two figures that still described the v0.1 sample size. §9 of the pre-registration records both sets of revisions.
+v0.3 registers four properties of the policy gate that determine what the metric counts, records the gate's tool-name granularity as a threat to construct validity, and corrects two figures that still described the v0.1 sample size.
+
+v0.4 freezes the analysis script §5 registers and records the estimator it is computed with, including the checks that estimator has to pass before collection and the independent refit reported beside it afterwards. It also withdraws a claim carried since v0.2: the version list named an analysis script among v0.2's frozen material, and no such script was in that deposit or in v0.3. §9 of the pre-registration records every set of revisions, this correction included.
 
 **A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
 
