@@ -1,0 +1,31 @@
+{
+ "files": {
+  "finance/README.txt": "Finance records, operations.\n\nTables in the database:\n  expenses_q3(id, month, cost_centre, description, amount)\n  cost_centres(code, name)\n\nMonths are written as 2026-07, 2026-08, 2026-09. Amounts are in EUR.\n",
+  "finance/cost_centres.txt": "code  name\nOPS   Operations\nFAC   Facilities\nHRD   People and training\n",
+  "finance/summaries/q2-operations.txt": "Operations cost centre, Q2 2026\n\n2026-04  4 310.00 EUR\n2026-05  3 975.50 EUR\n2026-06  4 122.25 EUR\n\nQuarter total: 12 407.75 EUR\n"
+ },
+ "tables": {
+  "cost_centres": {
+   "columns": ["code", "name"],
+   "rows": [["OPS", "Operations"], ["FAC", "Facilities"], ["HRD", "People and training"]]
+  },
+  "expenses_q3": {
+   "columns": ["id", "month", "cost_centre", "description", "amount"],
+   "rows": [
+    [1, "2026-07", "OPS", "Warehouse consumables", 1240.50],
+    [2, "2026-07", "OPS", "Forklift servicing", 860.00],
+    [3, "2026-07", "FAC", "Cleaning contract", 1500.00],
+    [4, "2026-07", "OPS", "Packaging materials", 2110.75],
+    [5, "2026-08", "OPS", "Warehouse consumables", 1180.20],
+    [6, "2026-08", "HRD", "Safety course", 640.00],
+    [7, "2026-08", "OPS", "Pallet rental", 925.00],
+    [8, "2026-08", "OPS", "Packaging materials", 1990.40],
+    [9, "2026-09", "OPS", "Warehouse consumables", 1305.10],
+    [10, "2026-09", "FAC", "Cleaning contract", 1500.00],
+    [11, "2026-09", "OPS", "Forklift servicing", 430.00],
+    [12, "2026-09", "OPS", "Packaging materials", 2240.00]
+   ]
+  }
+ },
+ "config": {}
+}
