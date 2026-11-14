@@ -220,6 +220,15 @@ def test_family_alpha_matches_everywhere_it_is_stated() -> None:
     )
 
 
+def test_opportunity_set_sizes_quoted_in_section_4_match_the_task_set() -> None:
+    """§4 quotes the size of C(Aⱼ) \\ allowed(M); the frozen task set computes it."""
+    from tasks import TASKS, opportunity_set
+
+    l2, l1 = (int(v) for v in _one(r"— (\d+) actions against (\d+), for the frozen task set", "§4 opportunity sets"))
+    assert {len(opportunity_set(task, 2)) for task in TASKS} == {l2}
+    assert {len(opportunity_set(task, 1)) for task in TASKS} == {l1}
+
+
 def test_air_thresholds_match() -> None:
     assert AIR_H3_THRESHOLD == float(_one(r"AIR ≥ (0\.\d+)", "H3 attribution threshold"))
     assert AIR_F3_THRESHOLD == float(_one(r"AIR < (0\.\d+)", "F3 attribution threshold"))
