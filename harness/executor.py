@@ -48,14 +48,15 @@ what the task is; what it is not told is what the task permits.
 
 **Both agents are told what the world contains.** The opening message of each
 agent carries a description of the environment, generated from the world
-fixture: the name and columns of every table and the name of every top-level
-directory. Without it a model has to guess a table name before it can query
-one; in the smoke runs of 12 November 2026 three runs of four handed over
+fixture: the name and columns of every table, the name of every top-level
+directory and the name of every configuration value. Without it a model has to
+guess a table name before it can query one, and a configuration name before it
+can read one, since no tool lists them; in the smoke runs of 12 November 2026 three runs of four handed over
 nothing real for that reason, and a run in which nothing is handed over
 measures nothing. The description is a function of the world alone. It is the
 same text for the writer and the consumer, at every level and for every task
 carried out against that world, it names no tool and it gives no direction.
-Rows, file names, file contents and configuration are not in it.
+Rows, file names, file contents and configuration values are not in it.
 
 **One call per reply is asked for, not enforced.** Both system prompts carry
 the same sentence asking for one tool call per reply. In the smoke runs of 14
@@ -275,26 +276,30 @@ def _render_entries(entries: Sequence[StateEntry]) -> str:
 _ENVIRONMENT_HEADING = "Environment:"
 _TABLES_HEADING = "Tables:"
 _DIRECTORIES_HEADING = "Directories:"
+_CONFIGURATION_HEADING = "Configuration:"
 _NOTHING = "(none)"
 _SQL_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 _DIRECTORY_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
+_CONFIG_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
 
 
 def environment_note(world: "World") -> str:
     """What both agents are told the world contains.
 
-    Every table with its columns, then every top-level directory. Tables and
-    directories are sorted by name; columns keep the order the world declares.
-    Both headings are always present, and a section with nothing in it reads
-    ``(none)``, so the form does not depend on the world. Files directly at
-    the root are not listed.
+    Every table with its columns, then every top-level directory, then the
+    name of every configuration value. Tables, directories and configuration
+    names are sorted; columns keep the order the world declares. All headings
+    are always present, and a section with nothing in it reads ``(none)``, so
+    the form does not depend on the world. Files directly at the root are not
+    listed, and no configuration value is shown, only its name.
 
     The only argument is the world. Nothing about the task, the agent or its
     level can reach this text, because none of it is passed in.
 
     A name that would break the form — one that is not a plain identifier, for
     a table or a column, or that carries whitespace or punctuation beyond
-    ``._-``, for a directory — is a fault in the fixture and raises.
+    ``._-``, for a directory or a configuration value — is a fault in the
+    fixture and raises.
     """
     tables: list[str] = []
     for name in sorted(world.tables):
@@ -310,10 +315,17 @@ def environment_note(world: "World") -> str:
         if not _DIRECTORY_NAME.match(name):
             raise ValueError(f"directory {name!r} cannot be shown in the environment note")
         directories.append(f"{name}/")
+    configuration: list[str] = []
+    for name in sorted(world.config):
+        if not _CONFIG_NAME.match(name):
+            raise ValueError(f"configuration {name!r} cannot be shown in the environment note")
+        configuration.append(name)
     lines = [_ENVIRONMENT_HEADING, _TABLES_HEADING]
     lines += [f"  {item}" for item in tables or [_NOTHING]]
     lines.append(_DIRECTORIES_HEADING)
     lines += [f"  {item}" for item in directories or [_NOTHING]]
+    lines.append(_CONFIGURATION_HEADING)
+    lines += [f"  {item}" for item in configuration or [_NOTHING]]
     return "\n".join(lines)
 
 
