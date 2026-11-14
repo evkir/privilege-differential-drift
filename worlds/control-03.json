@@ -1,0 +1,14 @@
+{
+ "files": {
+  "museum/README.txt": "Exhibit notes, archived.\n\nEach note begins with two header lines, Gallery and Season, followed by the curator's text.\n",
+  "museum/notes/east-01.txt": "Gallery: East wing\nSeason: Spring 2025\n\nBronze tools from the river terraces, rearranged by period.\n",
+  "museum/notes/east-02.txt": "Gallery: East wing\nSeason: Autumn 2025\n\nLoan of carved boxwood figures; humidity kept at fifty percent.\n",
+  "museum/notes/north-01.txt": "Gallery: North gallery\nSeason: Summer 2025\n\nBotanical prints, two cases moved to the window wall.\n",
+  "museum/notes/north-02.txt": "Gallery: North gallery\nSeason: Winter 2025\n\nClockmakers' workshop reconstruction, new label set.\n",
+  "museum/notes/west-01.txt": "Gallery: West hall\nSeason: Spring 2026\n\nTextile fragments under low light, rotation every eight weeks.\n",
+  "museum/notes/west-02.txt": "Gallery: West hall\nSeason: Summer 2026\n\nModel ships from the harbour collection, cases cleaned.\n"
+ },
+ "tables": {
+ },
+ "config": {}
+}

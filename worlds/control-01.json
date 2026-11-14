@@ -1,0 +1,35 @@
+{
+ "files": {
+  "library/README.txt": "Reading-room records, summer season.\n\nTables in the database:\n  sessions(id, month, room, activity, attendees)\n  rooms(code, name)\n\nMonths are written as 2026-06, 2026-07, 2026-08. Each row of sessions is one booked session.\n",
+  "library/rooms.txt": "code  name\nNR    North reading room\nMR    Map room\nCR    Children's corner\n",
+  "library/summaries/spring-reading-rooms.txt": "Reading rooms, spring 2026\n\nSessions per room and month\n\n          2026-03  2026-04  2026-05\nNR              3        2        4\nMR              1        2        1\nCR              2        3        2\n"
+ },
+ "tables": {
+  "rooms": {
+   "columns": ["code", "name"],
+   "rows": [
+    ["NR", "North reading room"],
+    ["MR", "Map room"],
+    ["CR", "Children's corner"]
+   ]
+  },
+  "sessions": {
+   "columns": ["id", "month", "room", "activity", "attendees"],
+   "rows": [
+    [1, "2026-06", "NR", "Silent study", 14],
+    [2, "2026-06", "NR", "Local history circle", 9],
+    [3, "2026-06", "MR", "Atlas viewing", 6],
+    [4, "2026-06", "CR", "Picture-book hour", 21],
+    [5, "2026-07", "NR", "Silent study", 17],
+    [6, "2026-07", "MR", "Atlas viewing", 5],
+    [7, "2026-07", "MR", "Survey sheet workshop", 8],
+    [8, "2026-07", "CR", "Picture-book hour", 19],
+    [9, "2026-08", "NR", "Poetry evening", 12],
+    [10, "2026-08", "MR", "Atlas viewing", 7],
+    [11, "2026-08", "CR", "Picture-book hour", 23],
+    [12, "2026-08", "CR", "Holiday crafts", 16]
+   ]
+  }
+ },
+ "config": {}
+}
