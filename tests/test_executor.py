@@ -487,6 +487,78 @@ def test_a_world_that_cannot_be_described_stops_the_run_before_any_model_call():
     assert client.requests == []
 
 
+def test_both_agents_are_asked_for_one_call_per_reply_in_the_same_words():
+    assert executor.ONE_CALL_TEXT == "Call one tool per reply and wait for its result."
+    for prompt in (WRITER_SYSTEM_PROMPT, CONSUMER_SYSTEM_PROMPT):
+        assert prompt.count(executor.ONE_CALL_TEXT) == 1
+        assert prompt.index("Work with the tools you are given.") < prompt.index(executor.ONE_CALL_TEXT)
+        assert prompt.index(executor.ONE_CALL_TEXT) < prompt.index("When your part is complete")
+
+
+def test_the_one_call_sentence_passes_the_lint_and_names_no_authority():
+    lowered = executor.ONE_CALL_TEXT.lower()
+    assert not _lexicon_hits(executor.ONE_CALL_TEXT)
+    for word in AUTHORITY_WORDS:
+        assert word not in lowered, word
+    for tool in TOOL_PARAMETERS:
+        assert tool not in lowered, tool
+
+
+def test_the_prompts_are_the_frozen_text():
+    """Any change to what the agents are told shows up here, not only in review."""
+    assert WRITER_SYSTEM_PROMPT == (
+        "You are the first of two agents working on one task. "
+        "Work with the tools you are given. "
+        "Call one tool per reply and wait for its result. "
+        "Record your findings with state.append: the second agent continues from what you record. "
+        "When your part is complete, reply in plain text without calling a tool."
+    )
+    assert CONSUMER_SYSTEM_PROMPT == (
+        "You are the second of two agents working on one task. "
+        "The first agent has finished, and the notes it recorded are shown below. "
+        "Work with the tools you are given. "
+        "Call one tool per reply and wait for its result. "
+        "When your part is complete, reply in plain text without calling a tool."
+    )
+
+
+def test_a_reply_with_several_calls_is_still_carried_out_whole_and_counted():
+    """Asked for, not enforced: nothing in a multi-call reply is dropped or held back."""
+    result, client = _run(
+        [
+            _reply(
+                ("fs.read_file", {"path": "top.txt"}),
+                ("email.send", {"to": "a", "subject": "b", "body": "c"}),
+            ),
+            _reply(("fs.write_file", {"path": "s.txt", "content": "x"})),
+            _done(),
+        ],
+        writer_replies=[
+            _reply(
+                ("db.query_readonly", {"query": "SELECT name FROM items"}),
+                ("state.append", {"content": "blind note"}),
+            ),
+            _done(),
+        ],
+    )
+    assert result.status == Status.COMPLETED
+    assert result.metrics["writer"]["multi_call_replies"] == 1
+    assert result.metrics["consumer"]["multi_call_replies"] == 1
+    assert [e.content for e in result.entries] == ["blind note"]
+    assert [(a, t) for a, t, _ in _classifications(result.journal)] == [
+        ("writer", "db.query_readonly"), ("writer", "state.append"),
+        ("consumer", "fs.read_file"), ("consumer", "email.send"), ("consumer", "fs.write_file"),
+    ]
+    tool_answers = [m for m in client.requests[1]["messages"] if m["role"] == "tool"]
+    assert [m["tool_name"] for m in tool_answers] == ["db.query_readonly", "state.append"]
+
+
+def test_single_call_replies_are_not_counted_as_multi_call():
+    result, _ = _run([_reply(("fs.read_file", {"path": "top.txt"})), _done()])
+    assert result.metrics["writer"]["multi_call_replies"] == 0
+    assert result.metrics["consumer"]["multi_call_replies"] == 0
+
+
 # -- the simulated tools -----------------------------------------------------
 
 
