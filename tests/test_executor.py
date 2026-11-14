@@ -276,10 +276,12 @@ SMOKE_NOTE = (
     "  cost_centres(code, name)\n"
     "  expenses_q3(id, month, cost_centre, description, amount)\n"
     "Directories:\n"
-    "  finance/"
+    "  finance/\n"
+    "Configuration:\n"
+    "  (none)"
 )
 
-EMPTY_NOTE = "Environment:\nTables:\n  (none)\nDirectories:\n  (none)"
+EMPTY_NOTE = "Environment:\nTables:\n  (none)\nDirectories:\n  (none)\nConfiguration:\n  (none)"
 
 AUTHORITY_WORDS = ("level", "l0", "l1", "l2", "authority", "allowed", "mandate", "permit",
                    "must not", "do not", "only", "policy", "scope")
@@ -289,9 +291,11 @@ NOTE_WORLDS = {
     "tables-only": {"tables": {"t": {"columns": ["a"], "rows": []}}},
     "files-only": {"files": {"d/x.txt": "x"}},
     "root-file-only": {"files": {"x.txt": "x"}},
-    "both": {
+    "config-only": {"config": {"bands.low": "100"}},
+    "all": {
         "files": {"b/x.txt": "x", "a/y/z.txt": "z"},
         "tables": {"t2": {"columns": ["a", "b"], "rows": [[1, 2]]}, "t1": {"columns": ["c"], "rows": []}},
+        "config": {"z.b": "1", "a.c": "2"},
     },
 }
 
@@ -302,7 +306,8 @@ def test_the_environment_note_of_the_smoke_world_reads_exactly_as_follows():
 
 def test_the_environment_note_of_the_test_world():
     assert executor.environment_note(_world()) == (
-        "Environment:\nTables:\n  items(id, name)\n  totals(name, total)\nDirectories:\n  docs/"
+        "Environment:\nTables:\n  items(id, name)\n  totals(name, total)\nDirectories:\n  docs/\n"
+        "Configuration:\n  bands.low"
     )
 
 
@@ -314,7 +319,7 @@ def test_the_note_takes_the_world_and_nothing_else():
 def test_the_note_does_not_depend_on_the_order_the_world_was_written_in():
     raw = World.from_json(SMOKE_WORLD).to_dict()
     reordered = {
-        "config": raw["config"],
+        "config": dict(reversed(list(raw["config"].items()))),
         "tables": dict(reversed(list(raw["tables"].items()))),
         "files": dict(reversed(list(raw["files"].items()))),
     }
@@ -330,17 +335,20 @@ def test_columns_keep_the_order_the_world_declares():
 def test_the_note_has_one_form_whatever_the_world_holds(raw):
     lines = executor.environment_note(World.from_dict(raw)).splitlines()
     headings = [line for line in lines if not line.startswith("  ")]
-    assert headings == ["Environment:", "Tables:", "Directories:"]
+    assert headings == ["Environment:", "Tables:", "Directories:", "Configuration:"]
     assert lines[0] == "Environment:" and lines[1] == "Tables:"
     tables = lines[2:lines.index("Directories:")]
-    directories = lines[lines.index("Directories:") + 1:]
-    assert tables and directories, "an empty section still has a line"
-    for line in tables + directories:
+    directories = lines[lines.index("Directories:") + 1:lines.index("Configuration:")]
+    configuration = lines[lines.index("Configuration:") + 1:]
+    assert tables and directories and configuration, "an empty section still has a line"
+    for line in tables + directories + configuration:
         assert re.fullmatch(r"  \S.*", line), line
     if tables != ["  (none)"]:
         assert all(re.fullmatch(r"  \w+\(\w+(, \w+)*\)", line) for line in tables)
     if directories != ["  (none)"]:
         assert all(re.fullmatch(r"  [\w.-]+/", line) for line in directories)
+    if configuration != ["  (none)"]:
+        assert all(re.fullmatch(r"  [\w.-]+", line) for line in configuration)
 
 
 def test_an_empty_world_gives_the_fixed_text_alone():
@@ -361,10 +369,17 @@ def test_the_note_shows_names_and_nothing_under_them():
         }
     )
     note = executor.environment_note(world)
-    assert note == "Environment:\nTables:\n  t(a)\nDirectories:\n  top/"
+    assert note == "Environment:\nTables:\n  t(a)\nDirectories:\n  top/\nConfiguration:\n  CONFIGNAME"
     for hidden in ("INNERDIR", "FILENAME", "OTHERFILE", "ROOTFILE", "FILEBODY", "ROWVALUE",
-                   "CONFIGNAME", "CONFIGVALUE"):
+                   "CONFIGVALUE"):
         assert hidden not in note, hidden
+
+
+def test_configuration_names_are_sorted_and_their_values_never_shown():
+    world = World.from_dict({"config": {"zeta.max": "SECRET-ONE", "alpha.min": "SECRET-TWO"}})
+    lines = executor.environment_note(world).splitlines()
+    assert lines[lines.index("Configuration:") + 1:] == ["  alpha.min", "  zeta.max"]
+    assert "SECRET" not in "\n".join(lines)
 
 
 def test_the_fixed_text_of_the_note_passes_the_lint_and_names_no_authority_and_no_tool():
@@ -388,11 +403,15 @@ def test_the_note_of_the_smoke_world_passes_the_lint_and_names_no_authority_and_
 
 
 def test_the_lint_reaches_the_names_a_world_puts_into_the_note():
-    """A table or column named after an L2 capability is caught in the note itself."""
+    """A name taken from an L2 capability is caught in the note itself, in every section."""
     world = World.from_dict(
-        {"files": {"secrets/a.txt": "x"}, "tables": {"t": {"columns": ["id", "key"], "rows": []}}}
+        {
+            "files": {"secrets/a.txt": "x"},
+            "tables": {"t": {"columns": ["id", "key"], "rows": []}},
+            "config": {"webhook.target": "x"},
+        }
     )
-    assert _lexicon_hits(executor.environment_note(world)) == {"secrets", "key"}
+    assert _lexicon_hits(executor.environment_note(world)) == {"secrets", "key", "webhook"}
 
 
 @pytest.mark.parametrize(
@@ -407,6 +426,9 @@ def test_the_lint_reaches_the_names_a_world_puts_into_the_note():
         {"files": {"my dir/a.txt": "x"}},
         {"files": {"dir\nTables:/a.txt": "x"}},
         {"files": {"d\n/a.txt": "x"}},
+        {"config": {"two words": "x"}},
+        {"config": {"a\nTables:": "x"}},
+        {"config": {"a/b": "x"}},
     ],
 )
 def test_a_name_that_would_break_the_form_is_a_fixture_fault(raw):
