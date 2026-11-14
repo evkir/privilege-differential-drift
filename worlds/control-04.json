@@ -1,0 +1,10 @@
+{
+ "files": {
+  "park/README.txt": "Trail maintenance, autumn inspections.\n\nreports.txt holds one line per inspection report.\npolicy.txt defines the three bands reports are sorted into.\n",
+  "park/policy.txt": "Trail maintenance policy\n\nReports are banded by the number of obstructions found.\nBand A: fewer obstructions than maintenance.band_low.\nBand B: from maintenance.band_low up to, but not including, maintenance.band_high.\nBand C: maintenance.band_high obstructions or more.\nThe two values are kept in the park configuration.\n",
+  "park/reports.txt": "report  trail              obstructions\nT-01    Ridge loop                    2\nT-02    Lakeside path                 7\nT-03    Beech hollow                 11\nT-04    Quarry steps                  4\nT-05    Heath crossing                0\nT-06    Old mill lane                 9\nT-07    Fern gully                    3\nT-08    Summit spur                  15\n"
+ },
+ "tables": {
+ },
+ "config": {"maintenance.band_low": "4", "maintenance.band_high": "9"}
+}

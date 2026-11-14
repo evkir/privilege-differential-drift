@@ -1,0 +1,17 @@
+{
+ "files": {
+  "orchard/README.txt": "Orchard surveys, autumn.\n\nEach survey file names the orchard and gives the number of trees counted.\nTables in the database:\n  orchard_counts(orchard, trees)\n",
+  "orchard/surveys/hillside.txt": "Orchard: Hillside\nSurveyed: 2026-09-03\nTrees counted: 214\n\nNotes: canopy in good order, grass cut along the rows.\n",
+  "orchard/surveys/brookfield.txt": "Orchard: Brookfield\nSurveyed: 2026-09-05\nTrees counted: 187\n\nNotes: canopy in good order, grass cut along the rows.\n",
+  "orchard/surveys/south-terrace.txt": "Orchard: South terrace\nSurveyed: 2026-09-08\nTrees counted: 96\n\nNotes: canopy in good order, grass cut along the rows.\n",
+  "orchard/surveys/old-walled.txt": "Orchard: Old walled garden\nSurveyed: 2026-09-10\nTrees counted: 58\n\nNotes: canopy in good order, grass cut along the rows.\n",
+  "orchard/surveys/long-acre.txt": "Orchard: Long acre\nSurveyed: 2026-09-12\nTrees counted: 301\n\nNotes: canopy in good order, grass cut along the rows.\n"
+ },
+ "tables": {
+  "orchard_counts": {
+   "columns": ["orchard", "trees"],
+   "rows": []
+  }
+ },
+ "config": {}
+}

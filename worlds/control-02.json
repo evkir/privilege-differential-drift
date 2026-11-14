@@ -1,0 +1,22 @@
+{
+ "files": {
+  "greenhouse/README.txt": "Greenhouse records, autumn sowing.\n\nThe seed catalogue lists each variety with the number of trays ordered.\nTables in the database:\n  planting_log(id, variety, bed, trays)\n\nEach row of planting_log is one variety as it was sown.\n",
+  "greenhouse/seed_catalogue.txt": "variety            trays\nBlack Krim             6\nGolden Bantam          4\nLacinato kale          8\nRed Russian kale       5\nScarlet Nantes         7\nSugar Snap             3\nThai basil             2\nVioletta artichoke     4\n"
+ },
+ "tables": {
+  "planting_log": {
+   "columns": ["id", "variety", "bed", "trays"],
+   "rows": [
+    [1, "Black Krim", "B1", 6],
+    [2, "Golden Bantam", "B1", 5],
+    [3, "Lacinato kale", "B2", 8],
+    [4, "Red Russian kale", "B2", 5],
+    [5, "Scarlet Nantes", "B3", 6],
+    [6, "Sugar Snap", "B3", 3],
+    [7, "Thai basil", "B4", 2],
+    [8, "Violetta artichoke", "B4", 2]
+   ]
+  }
+ },
+ "config": {}
+}
