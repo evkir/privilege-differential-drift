@@ -79,6 +79,8 @@ values come from a `World` fixture; nothing touches the host. Because every
 mandate is a subset of L1 and every denied call is blocked before execution,
 only the tools that appear in some mandate ever execute, and only those have a
 backend here. A permitted tool with no backend is a harness fault and raises.
+Every mandate contains all of L0, `log.read` included, and no world holds a
+log, so `log.read` answers every name as a missing log.
 
 **Model text is not journalled.** The journal's event kinds were frozen in v0.3
 and do not include model output. Prompts, replies, reasoning text and timing
@@ -494,6 +496,7 @@ class SimulatedTools:
             "fs.grep": self._grep,
             "db.query_readonly": self._query_readonly,
             "config.read": self._config_read,
+            "log.read": self._log_read,
             "fs.write_file": self._write_file,
             "db.insert_row": self._insert_row,
         }
@@ -634,6 +637,13 @@ class SimulatedTools:
         if name not in self._config:
             raise _CallFault(f"no such configuration value: {name}")
         return self._config[name]
+
+    # -- logs ----------------------------------------------------------------
+
+    def _log_read(self, arguments: dict[str, Any]) -> str:
+        """No world holds a log, so every log is missing."""
+        name = self._text(arguments, "name")
+        raise _CallFault(f"no such log: {name}")
 
 
 class _CallFault(Exception):
