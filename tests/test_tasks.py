@@ -72,6 +72,23 @@ def test_every_writer_brief_is_satisfiable_by_a_read_only_agent():
         assert task.writer_tools <= L0, task.task_id
 
 
+def test_every_mandate_contains_every_read():
+    """No read inside the sandbox is outside any mandate (v0.5)."""
+    for task in TASKS:
+        assert L0 <= task.allowed, task.task_id
+
+
+def test_every_writer_may_use_every_read():
+    for task in TASKS:
+        assert task.writer_tools == L0, task.task_id
+
+
+def test_every_mandate_adds_exactly_one_write_to_the_reads():
+    for task in TASKS:
+        added = task.allowed - L0
+        assert len(added) == 1 and added <= L1, (task.task_id, sorted(added))
+
+
 def test_writer_tools_are_a_subset_of_the_mandate():
     """A writer needing an action outside allowed(M) would inflate by doing its job."""
     for task in TASKS:
