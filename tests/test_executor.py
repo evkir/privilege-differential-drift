@@ -30,6 +30,7 @@ a local stub server.
 from __future__ import annotations
 
 import copy
+import dataclasses
 import inspect
 import json
 import re
@@ -136,8 +137,13 @@ class ScriptedClient:
     def __init__(self, replies) -> None:
         self.replies = list(replies)
         self.requests: list[dict] = []
+        self.trace: list[str] = []
+
+    def unload(self) -> None:
+        self.trace.append("unload")
 
     def chat(self, *, model, messages, tools, options, think) -> ChatResponse:
+        self.trace.append("chat")
         self.requests.append(
             {"model": model, "messages": copy.deepcopy(messages), "tools": tools,
              "options": dict(options), "think": think}
@@ -1064,6 +1070,53 @@ def test_a_failure_to_identify_the_model_is_a_model_error_before_any_call():
     assert result.status == Status.MODEL_ERROR and not client.requests
 
 
+def test_each_agent_starts_on_a_freshly_loaded_model():
+    """The consumer of a run and the consumer of its re-run must start alike."""
+    result, client = _run([_reply(("fs.read_file", {"path": "top.txt"})), _done()])
+    assert result.status == Status.COMPLETED
+    assert client.trace == ["unload", *["chat"] * 4, "unload", *["chat"] * 2]
+
+
+def test_the_consumer_of_a_re_run_starts_on_a_freshly_loaded_model():
+    original, _ = _run([_done()])
+    client = ScriptedClient([_reply(("fs.read_file", {"path": "top.txt"})), _done()])
+    execute_consumer(
+        _config(), _world(), client, original.entries, run_id="re-run",
+        ablated_from=original.run_id, clock=CLOCK,
+    )
+    assert client.trace == ["unload", "chat", "chat"]
+
+
+def test_no_model_is_unloaded_for_a_consumer_that_is_never_started():
+    result, client = _run([], writer_replies=[_done()])
+    assert result.status == Status.WRITER_NO_STATE
+    assert client.trace == ["unload", "chat"]
+
+
+def test_a_model_that_cannot_be_unloaded_is_a_model_error_and_is_not_called():
+    class Stuck(ScriptedClient):
+        def unload(self):
+            raise ModelError("the server still holds a model")
+
+    client = Stuck(WRITER_OK)
+    result = execute_run(_config(), _world(), client, clock=CLOCK)
+    assert result.status == Status.MODEL_ERROR and not client.requests
+    assert result.error == "the server still holds a model"
+
+
+def test_the_load_time_of_each_agents_first_call_is_kept():
+    def loaded_in(seconds, reply):
+        stats = {**reply.stats, "load_duration": int(seconds * 1e9)}
+        return dataclasses.replace(reply, stats=stats)
+
+    writer = [loaded_in(5.25, WRITER_OK[0]), loaded_in(0.5, WRITER_OK[1]), *WRITER_OK[2:]]
+    result, _ = _run([loaded_in(4.75, _done())], writer_replies=writer)
+    assert result.metrics["writer"]["load_seconds"] == pytest.approx(5.25)
+    assert result.metrics["consumer"]["load_seconds"] == pytest.approx(4.75)
+    unstarted, _ = _run([], writer_replies=[_done()])
+    assert unstarted.metrics["consumer"]["load_seconds"] is None
+
+
 def test_a_harness_fault_is_not_swallowed_as_a_run_outcome():
     class Broken(ScriptedClient):
         def chat(self, **_):
@@ -1248,6 +1301,8 @@ class _Stub(BaseHTTPRequestHandler):
 
     def _serve(self, body):
         route = self.routes.get(self.path)
+        if isinstance(route, list):  # replies in turn; the last one stays
+            route = route.pop(0) if len(route) > 1 else route[0]
         _Stub.seen.append((self.command, self.path, body))
         if route is None:
             self.send_response(404)
@@ -1351,6 +1406,35 @@ def test_loaded_reports_what_the_server_holds_in_memory(stub):
     assert OllamaClient(stub).loaded() == [{"name": "m", "size": 10, "size_vram": 10}]
 
 
+def test_unload_asks_for_every_loaded_model_and_waits_until_none_is_left(stub):
+    held = lambda *names: (200, {"models": [{"name": n} for n in names]})  # noqa: E731
+    _Stub.routes["/api/ps"] = [held("a:1", "b:2"), held("b:2"), held("b:2"), held()]
+    _Stub.routes["/api/generate"] = (200, {"done": True, "done_reason": "unload"})
+    OllamaClient(stub).unload()
+    posted = [body for method, path, body in _Stub.seen if path == "/api/generate"]
+    assert posted == [{"model": "a:1", "keep_alive": 0}, {"model": "b:2", "keep_alive": 0}]
+    assert [path for _, path, _ in _Stub.seen].count("/api/ps") == 4
+
+
+def test_unload_sends_nothing_when_no_model_is_loaded(stub):
+    _Stub.routes["/api/ps"] = (200, {"models": []})
+    OllamaClient(stub).unload()
+    assert {path for _, path, _ in _Stub.seen} == {"/api/ps"}
+
+
+def test_a_model_the_server_keeps_holding_is_a_model_error(stub):
+    _Stub.routes["/api/ps"] = (200, {"models": [{"name": "a:1"}]})
+    _Stub.routes["/api/generate"] = (200, {"done": True})
+    with pytest.raises(ModelError, match="still holds a model"):
+        OllamaClient(stub, unload_timeout=0.5).unload()
+
+
+def test_a_loaded_model_without_a_name_is_a_model_error(stub):
+    _Stub.routes["/api/ps"] = (200, {"models": [{"size": 1}]})
+    with pytest.raises(ModelError, match="no name"):
+        OllamaClient(stub).unload()
+
+
 # -- the command line and the smoke fixture ----------------------------------
 
 
@@ -1370,7 +1454,9 @@ def test_the_smoke_world_loads_and_plants_no_hint():
 def test_the_command_line_runs_one_run_and_stores_it(stub, tmp_path, capsys):
     _Stub.routes["/api/version"] = (200, {"version": "0.99.0"})
     _Stub.routes["/api/tags"] = (200, {"models": [{"name": "m:1", "digest": "ccc"}]})
-    _Stub.routes["/api/ps"] = (200, {"models": [{"name": "m:1", "size": 2**30, "size_vram": 2**30}]})
+    held = (200, {"models": [{"name": "m:1", "size": 2**30, "size_vram": 2**30}]})
+    _Stub.routes["/api/ps"] = [held, (200, {"models": []}), held]
+    _Stub.routes["/api/generate"] = (200, {"done": True, "done_reason": "unload"})
     _Stub.routes["/api/chat"] = (200, {"message": {"role": "assistant", "content": "nothing to do"},
                                        "done": True, "done_reason": "stop", "eval_count": 4,
                                        "eval_duration": 10**9, "prompt_eval_count": 50, "total_duration": 10**9})
@@ -1383,6 +1469,8 @@ def test_the_command_line_runs_one_run_and_stores_it(stub, tmp_path, capsys):
     assert code == 0
     out = capsys.readouterr().out
     assert "status         writer_no_state" in out and "100% on GPU" in out
+    paths = [path for _, path, _ in _Stub.seen]
+    assert paths.index("/api/generate") < paths.index("/api/chat")
     assert (tmp_path / "stub.financial-01.02.r000.journal.json").is_file()
     record = json.loads((tmp_path / "stub.financial-01.02.r000.run.json").read_text(encoding="utf-8"))
     assert record["config"]["seed"] == derive_seed("stub", "financial-01", 0, 2, 0)
