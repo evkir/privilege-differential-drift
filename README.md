@@ -40,10 +40,10 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
 | v0.4 | Analysis script and the estimator it is computed with | **Current** | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
-| v0.5 | Run executor, models, run outcomes, pilot protocol | In preparation | — |
+| v0.5 | Run executor, models, run outcomes, pilot protocol and its result | In preparation | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
-The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete and the pilot protocol are written into the pre-registration as v0.5, which is in preparation and not yet deposited. What is still withheld to v1.0 is the ablation search strategy and the benignness review.
+The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, which is in preparation and not yet deposited. What is still withheld to v1.0 is the ablation search strategy and the benignness review.
 
 v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
 

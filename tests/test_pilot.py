@@ -160,6 +160,60 @@ def test_the_pilot_settings_are_the_ones_the_document_registers():
     assert "replicate indices from 900" in DOCUMENT and pilot.PILOT_REPLICATE_BASE == 900
 
 
+def _recorded_pilot():
+    """The groups of the pilot table recorded in §5, as far as the rules read them."""
+    block = DOCUMENT.split("**Pilot result.**", 1)[1].split("**Statistical plan.**", 1)[0]
+    rows = [
+        [cell.strip() for cell in line.strip("|").split("|")]
+        for line in block.splitlines() if line.startswith("|")
+    ]
+    cells = {row[0]: row[1:] for row in rows}
+    groups = {}
+    for column, label in enumerate(cells["Measured"]):
+        family, _, mode = label.partition(", think ")
+        value = lambda name: cells[name][column]  # noqa: E731
+        runs, nulls = int(value("Runs")), int(value("Consumer re-runs on unaltered entries"))
+        most = value("Most model calls by an agent in a completed run")
+        same = value("Re-runs repeating the sequence of invocations")
+        groups[label] = {
+            "family": family, "think": {"": None, "on": True, "off": False}[mode],
+            "collapse_share": Fraction(round(float(value("Collapse share")) * runs), runs),
+            "longest_reply": int(value("Longest reply, tokens")),
+            "prompt_peak": float(value("Peak prompt, share of context")) * 8192, "num_ctx": 8192,
+            "most_calls_completed": None if most == "n/a" else int(most),
+            "null_runs": nulls,
+            "null_same_invocations": 0 if same == "n/a" else round(float(same) * nulls),
+        }
+    return block, cells, groups
+
+
+def test_the_recorded_rule_values_are_what_the_rules_give_on_the_recorded_table():
+    block, cells, groups = _recorded_pilot()
+    assert set(groups) == {pilot.group_label(f.label, t) for f in FAMILIES.values() for t in f.think_modes}
+    assert sum(int(n) for n in cells["Runs"]) == len(pilot_plan(sorted(FAMILIES))) == 70
+    rules = rule_values(groups)
+    assert rules["reasoning_mode"] == {"gemma4": "off", "qwen3": "off"}
+    assert {f for f, verdict in rules["family_replacement"].items() if verdict.startswith("replace")} == {
+        "llama3.1", "mistral-nemo"}
+    assert (rules["reply_length_limit"], rules["context_size"], rules["step_limit"]) == (8192, 8192, 28)
+    assert (rules["null_runs"], rules["collection_blocked"]) == (47, False)
+    for family, mode in rules["reasoning_mode"].items():
+        assert f"- Reasoning mode of {family}: {mode}\n" in block
+    for family, verdict in rules["family_replacement"].items():
+        assert f"- Family replacement, {family}: {verdict}\n" in block
+    for line in (
+        "- Reply-length limit: 8192 tokens (longest reply 2535)",
+        "- Context size: 8192 tokens",
+        "- Step limit: 28 (most model calls by an agent in a completed run: 14)",
+        "- Reproducibility of the consumer: 0 of 47 re-runs differ in their invocations — does not block collection",
+        "a context of 8,192 tokens, a reply-length limit of 8,192 tokens and a step limit of 28 per agent",
+        "`granite4.1:8b` (IBM), `gemma4:12b` (Google) and `qwen3:14b` (Alibaba, Qwen team), the last two with "
+        "the reasoning mode off",
+    ):
+        assert line in block
+    assert set(cells["Re-runs repeating every reply in full"]) == {"1.00", "n/a"}
+
+
 def test_an_unknown_family_is_refused():
     with pytest.raises(PilotError):
         pilot_plan(["gpt"])

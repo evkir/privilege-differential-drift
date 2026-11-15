@@ -178,7 +178,7 @@ Power, sample size and minimum-detectable-effect figures are produced by `analys
 
 *An out-of-capability attempt is not an inflation event.* D7(ii) requires the action to be within C(Aⱼ). Such attempts are recorded and counted separately as escalation attempts.
 
-**Models.** Collection runs on open-weight models, locally, through Ollama on a single GPU with 12 GB of memory: `llama3.1:8b` (Meta), `mistral-nemo:12b` (Mistral AI with NVIDIA) and `qwen3:14b` (Alibaba, Qwen team). "Model families from distinct providers" in this section means families from three different developers of open weights; no hosted model API is used at any point. Each tag runs at its default quantisation and with the sampling parameters it is shipped with, temperature included. The weights digest recorded with every run identifies the model manifest and with it those parameters, and the values in force are listed with the results. Temperature is not set to zero: under greedy decoding the seed has no effect, and the replicates of a cell would be one run repeated. It is not set to one common value either: model family is a fixed effect and H1 and H2 are tested within it, so a difference in shipped temperature between families is absorbed by the family term, not by Δ̂ or by category. Whether `qwen3:14b` runs with its reasoning mode on or off, and the context size, reply-length limit and step limit of a run, are fixed by the pilot below, under rules registered here before it is launched.
+**Models.** Collection runs on open-weight models, locally, through Ollama on a single GPU with 12 GB of memory: `llama3.1:8b` (Meta), `mistral-nemo:12b` (Mistral AI with NVIDIA) and `qwen3:14b` (Alibaba, Qwen team). "Model families from distinct providers" in this section means families from three different developers of open weights; no hosted model API is used at any point. Each tag runs at its default quantisation and with the sampling parameters it is shipped with, temperature included. The weights digest recorded with every run identifies the model manifest and with it those parameters, and the values in force are listed with the results. Temperature is not set to zero: under greedy decoding the seed has no effect, and the replicates of a cell would be one run repeated. It is not set to one common value either: model family is a fixed effect and H1 and H2 are tested within it, so a difference in shipped temperature between families is absorbed by the family term, not by Δ̂ or by category. Whether `qwen3:14b` runs with its reasoning mode on or off, and the context size, reply-length limit and step limit of a run, are fixed by the pilot below, under rules registered here before it is launched. The pilot replaced the first two of these models by the candidates named below; the models and settings collection runs with are stated under *Pilot result*.
 
 **Run executor.** `harness/executor.py` carries out one run: the writing agent at level *i* performs its brief and records entries in *S*; the consuming agent at level *j* is then given those entries and performs the other half of the task. Every attempted invocation of either agent passes through the gate and into the journal. What the agents are shown is part of the instrument, so the choices are registered rather than left to the code.
 
@@ -225,7 +225,55 @@ Fixed from the pilot by rules registered now:
 - *Family replacement*: as above. For a family piloted in two reasoning modes, the collapse share is that of the mode the first rule selects.
 - *Reproducibility of the consumer*: if the consumer of any re-run on unaltered entries makes a sequence of invocations other than the original's, collection does not start until the cause is established and recorded in a new version. A re-run that differs only in the text of a reply is reported and does not block.
 
-The pilot table and the values these rules give are recorded in this section before collection begins.
+**Pilot result.** The pilot was run on 15 November 2026 by `harness/pilot.py`: the 40 runs registered above and then, two families having exceeded the replacement threshold, the 30 runs of their candidates. That is 70 runs and 47 re-runs of a consumer on unaltered entries; no run or re-run met a backend failure. The table is the runner's output over all 70. A column is a family, or a family in one reasoning mode.
+
+| Measured | gemma4, think off | gemma4, think on | granite4.1 | llama3.1 | mistral-nemo | qwen3, think off | qwen3, think on |
+|---|---|---|---|---|---|---|---|
+| Runs | 10 | 10 | 10 | 10 | 10 | 10 | 10 |
+| Wall time per run, s (median / max) | 52.5 / 55.4 | 73.1 / 110.2 | 26.9 / 33.6 | 9.6 / 21.9 | 8.6 / 25.0 | 34.8 / 46.4 | 199.0 / 442.5 |
+| Time per run with unloading, s (median) | 53.5 | 74.0 | 27.5 | 9.9 | 9.0 | 35.5 | 199.5 |
+| Generation speed, tokens/s (median) | 44.8 | 41.3 | 44.8 | 48.8 | 36.9 | 27.2 | 26.6 |
+| Model load, s (median) | 9.2 | 9.3 | 4.5 | 5.0 | 5.3 | 5.5 | 5.5 |
+| Writer model calls (median / max) | 7 / 10 | 7 / 11 | 7 / 14 | 3 / 5 | 2 / 2 | 7 / 13 | 7 / 13 |
+| Consumer model calls (median / max) | 4 / 6 | 4.5 / 7 | 2 / 5 | 0 / 2 | 0 / 0 | 2 / 6 | 1.5 / 3 |
+| Writer tool invocations (median / max) | 6 / 9 | 6 / 10 | 6 / 13 | 2 / 7 | 1.5 / 2 | 6 / 12 | 6 / 12 |
+| Consumer tool invocations (median / max) | 3 / 5 | 3.5 / 6 | 1 / 5 | 0 / 1 | 0 / 0 | 1 / 5 | 0.5 / 2 |
+| Ended `completed` | 1.00 | 1.00 | 0.90 | 0.10 | 0.00 | 1.00 | 0.70 |
+| Ended `writer_no_state` | 0.00 | 0.00 | 0.10 | 0.90 | 1.00 | 0.00 | 0.30 |
+| Collapse share | 0.00 | 0.00 | 0.10 | 0.90 | 1.00 | 0.00 | 0.30 |
+| Runs with a writer scope breach | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.10 |
+| Replies holding more than one call | 0.00 | 0.00 | 0.02 | 0.06 | 0.28 | 0.00 | 0.01 |
+| Completed runs in which the consumer made no call | 0.20 | 0.00 | 0.22 | 0.00 | n/a | 0.40 | 0.29 |
+| Peak prompt, share of context | 0.22 | 0.23 | 0.20 | 0.16 | 0.09 | 0.19 | 0.18 |
+| Longest reply, tokens | 265 | 714 | 307 | 137 | 216 | 190 | 2535 |
+| Most model calls by an agent in a completed run | 10 | 11 | 14 | 4 | n/a | 13 | 13 |
+| Share of the model on the GPU, server (min) | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| Memory of the model process, driver, MiB (max) | 8776 | 8776 | 5918 | 5322 | 7314 | 9394 | 9394 |
+| Memory in use on the GPU, driver, MiB (max) | 9497 | 9446 | 6636 | 6077 | 8038 | 10155 | 10164 |
+| Consumer re-runs on unaltered entries | 10 | 10 | 9 | 1 | 0 | 10 | 7 |
+| Re-runs repeating the sequence of invocations | 1.00 | 1.00 | 1.00 | 1.00 | n/a | 1.00 | 1.00 |
+| Re-runs repeating every reply in full | 1.00 | 1.00 | 1.00 | 1.00 | n/a | 1.00 | 1.00 |
+| Time per re-run, s (median) | 23.4 | 40.1 | 11.0 | 7.9 | n/a | 14.1 | 33.7 |
+| Backend failures retried | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Runs and re-runs abandoned on backend failure | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+The values the registered rules give:
+
+- Reasoning mode of gemma4: off
+- Reasoning mode of qwen3: off
+- Family replacement, gemma4: keep (collapse share 0.00)
+- Family replacement, granite4.1: keep (collapse share 0.10)
+- Family replacement, llama3.1: replace (collapse share 0.90)
+- Family replacement, mistral-nemo: replace (collapse share 1.00)
+- Family replacement, qwen3: keep (collapse share 0.00)
+- Reply-length limit: 8192 tokens (longest reply 2535)
+- Context size: 8192 tokens
+- Step limit: 28 (most model calls by an agent in a completed run: 14)
+- Reproducibility of the consumer: 0 of 47 re-runs differ in their invocations — does not block collection
+
+Collection therefore runs on `granite4.1:8b` (IBM), `gemma4:12b` (Google) and `qwen3:14b` (Alibaba, Qwen team), the last two with the reasoning mode off, at a context of 8,192 tokens, a reply-length limit of 8,192 tokens and a step limit of 28 per agent. `llama3.1:8b` and `mistral-nemo:12b` leave the design: in 19 of their 20 pilot runs the writer stopped without leaving an entry. The three models are still from three developers of open weights and still of 8, 12 and 14 billion parameters. The reply-length limit follows from the longest reply of the pilot, 2,535 tokens, which `qwen3:14b` generated with its reasoning mode on, a mode collection does not use; the rule reads every pilot run and is applied as registered.
+
+One measurement is not computed as the runner first computed it. The share of re-runs repeating every reply was first taken over the calls as the server returned them, and 37 of the 47 re-runs differed from their originals: every re-run in which the consumer made a call, and no other. The server attaches an identifier of its own to each call it returns; in the run that was inspected, that identifier was the only difference between the two transcripts. A reply is now compared as its text, its reasoning text and its calls, each call as the tool and the arguments the executor read from it. The table computes this from the stored transcripts of all 70 runs, and under it all 47 re-runs repeat every reply. The rule on the reproducibility of the consumer reads the sequence of invocations and was not affected.
 
 **Statistical plan.** Mixed-effects logistic regression with inflation as the outcome, Δ̂ and category as fixed effects, and task identifier as a random effect. Model family enters as a **fixed** effect with three levels: three groups are too few to estimate a variance component stably, and the registered design treats the three providers as the population of interest rather than a sample drawn from one. Holm correction across the pre-specified comparisons, with the design powered at the most stringent step of the sequence (α/k) rather than the least. Bootstrap confidence intervals on per-cell MIR, resampled over tasks rather than over runs: runs sharing a task are not independent, and resampling runs would report an interval narrower than the design supports. The analysis script is `analysis/model.py`, written and frozen with this version, before data collection.
 
@@ -292,7 +340,7 @@ This document records the formulation, metric definitions, and falsification cri
 - **v0.2** — frozen task set, allowlists, power analysis.
 - **v0.3** — harness (policy gate and event journal), the gate properties recorded in §5, the gate-granularity limitation in §7, and the correction below.
 - **v0.4 (this version)** — the analysis script of §5, the estimator it is computed with, and the correction below.
-- **v0.5** — in preparation, not yet deposited: the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, and the pilot protocol.
+- **v0.5** — in preparation, not yet deposited: the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, the pilot protocol, and the result of the pilot.
 - **v1.0** — full logs, results, and either the finding or the null.
 
 What v0.2 adds to the record, beyond the material named above: the sample size is resized against H2 rather than H1 and now accounts for the discard rate F4 permits; F2 is restated as an equivalence test, since a failure to reject is not evidence of no conditioning; model family moves from a random to a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. Four of these are revisions to v0.1, made before any data was collected and recorded here rather than silently.
@@ -305,9 +353,9 @@ What v0.4 adds, all before any data collection: the analysis script registered i
 
 v0.4 also withdraws a claim this document has carried since v0.2. The version list above named an analysis script among the material frozen in v0.2, and the README repeated it. No such script was in the v0.2 deposit or in the v0.3 deposit: `analysis/power.py` sizes the design and states in its own documentation that it is not the analysis model, and the model of §5 had no implementation until this version. The claim is withdrawn and the script it described is frozen here. The test that holds this document and the code together was comparing registered figures only, which is why a missing artifact passed it; it now also requires that every source file this document names is present, so an artifact can no longer be registered in prose without existing.
 
-What v0.5 adds, all before any data collection: the run executor of §5 and the choices it makes about what the agents are shown, including the description of the environment and the request for one tool call per reply, both added after smoke runs; the unloading of the model before each agent and before the consumer of each re-run, added after repeats under one seed diverged with the state the server was left in; the three models, run locally, with the reading of "distinct providers" as three developers of open weights; the decision to run each model at its shipped sampling parameters rather than at a temperature chosen for the design; the definition of a completed run that M1's validity condition refers to, and the separation of collapsed runs from D6 discards, with the replacement of collapsed runs, its limit and the checks it requires; a rule for replacing a family that cannot carry out the task, with a candidate of the same size named for each family it can apply to; and a pilot protocol that fixes, by rules stated in advance, the parameters that could not be fixed without running the models. The pilot also re-runs each consumer on unaltered entries, and collection does not start if any such re-run acts differently. §7 records the external validity of the design, the confounding of model family with model size, the harness choices made on smoke runs, and collapse as a source of selection.
+What v0.5 adds, all before any data collection: the run executor of §5 and the choices it makes about what the agents are shown, including the description of the environment and the request for one tool call per reply, both added after smoke runs; the unloading of the model before each agent and before the consumer of each re-run, added after repeats under one seed diverged with the state the server was left in; the three models, run locally, with the reading of "distinct providers" as three developers of open weights; the decision to run each model at its shipped sampling parameters rather than at a temperature chosen for the design; the definition of a completed run that M1's validity condition refers to, and the separation of collapsed runs from D6 discards, with the replacement of collapsed runs, its limit and the checks it requires; a rule for replacing a family that cannot carry out the task, with a candidate of the same size named for each family it can apply to; and a pilot protocol that fixes, by rules stated in advance, the parameters that could not be fixed without running the models. The pilot also re-runs each consumer on unaltered entries, and collection does not start if any such re-run acts differently. The pilot was run on 15 November 2026 and its table is in §5: `llama3.1:8b` and `mistral-nemo:12b` exceeded the collapse threshold and are replaced by `granite4.1:8b` and `gemma4:12b`, both reasoning modes are off, and no consumer re-run acted differently. §7 records the external validity of the design, the confounding of model family with model size, the harness choices made on smoke runs, and collapse as a source of selection.
 
-This version is recorded as it is written. The worlds the tasks are carried out against and the pilot table with the values its rules give are added before it is deposited.
+This version is recorded as it is written. The worlds the tasks are carried out against are added before it is deposited.
 
 v0.5 also amends the frozen task set. Every mandate, and every writer's tool set, now contains all of L0, where each previously named the reads its archetype was expected to use. In smoke runs on 14 November 2026 a writer refused a directory listing its brief did not name either gave up or was counted as breaching its brief — three runs of five — and a consumer looking at a directory would have been a candidate inflation event. A read inside the sandbox is not what this work measures. The opportunity sets of §4 change accordingly, from 12 or 13 actions for an L2 consumer and 5 or 6 for an L1 consumer to 9 and 2 for every task; the consumer of the decisive comparison is at L2 in both of its conditions, so that comparison is unaffected.
 
