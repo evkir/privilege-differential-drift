@@ -92,6 +92,18 @@ seed, which the journal hashes. D7(iii) re-runs the consumer "under a fixed
 seed"; `execute_consumer` is that entry point, taking the surviving entries
 and reusing the original seed and world.
 
+**Each agent starts on a freshly loaded model.** Before the first call of the
+writer, of the consumer and of the consumer of a D7(iii) re-run, the executor
+has the backend unload every model it holds and waits until none is left. A
+seed does not fix a reply on its own: on 15 November 2026, under one seed and
+one prompt, a consumer that followed its writer on a loaded model and the same
+consumer started after a load made the same call and then wrote different
+final replies, while agents started after a load repeated themselves. Without
+the unload the consumer of a run and the consumer of its re-run would start
+from different states, and a difference between them could not be put down to
+the entries removed. The load time of each agent's first call is kept in the
+metrics.
+
 No external dependencies: standard library only.
 """
 
@@ -103,6 +115,7 @@ import json
 import re
 import sqlite3
 import sys
+import time
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass
@@ -687,6 +700,8 @@ class ChatClient(Protocol):
 
     def identity(self, model: str) -> dict[str, Any]: ...
 
+    def unload(self) -> None: ...
+
 
 _STAT_FIELDS = (
     "total_duration",
@@ -702,9 +717,16 @@ _STAT_FIELDS = (
 class OllamaClient:
     """Minimal client for a local Ollama server (`/api/chat`, non-streaming)."""
 
-    def __init__(self, host: str = "http://127.0.0.1:11434", *, timeout: float = 900.0) -> None:
+    def __init__(
+        self,
+        host: str = "http://127.0.0.1:11434",
+        *,
+        timeout: float = 900.0,
+        unload_timeout: float = 60.0,
+    ) -> None:
         self._host = host.rstrip("/")
         self._timeout = timeout
+        self._unload_timeout = unload_timeout
 
     def _call(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         data = None if payload is None else json.dumps(payload).encode("utf-8")
@@ -775,6 +797,26 @@ class OllamaClient:
     def loaded(self) -> list[dict[str, Any]]:
         """Models currently in memory, with `size` and `size_vram` in bytes."""
         return list(self._call("/api/ps").get("models", []))
+
+    def unload(self) -> None:
+        """Unload every model the server holds and return once none is left.
+
+        Every model, not only the one about to run: a second model left in
+        memory changes how much of the next one fits on the GPU.
+        """
+        for entry in self.loaded():
+            name = entry.get("name") or entry.get("model")
+            if not isinstance(name, str) or not name:
+                raise ModelError("/api/ps: a loaded model carries no name")
+            self._call("/api/generate", {"model": name, "keep_alive": 0})
+        deadline = time.monotonic() + self._unload_timeout
+        while self.loaded():
+            if time.monotonic() >= deadline:
+                raise ModelError(
+                    f"the server still holds a model {self._unload_timeout:g} s "
+                    "after it was asked to unload"
+                )
+            time.sleep(0.2)
 
 
 # ---------------------------------------------------------------------------
@@ -1067,6 +1109,7 @@ class _Run:
         agent = _AGENT[role]
         tools = tool_schemas(self.gate.level_of(role))
         self.transcript[agent] = {"messages": messages, "tools": [t["function"]["name"] for t in tools]}
+        self.client.unload()
         for step in range(self.config.max_steps):
             response = self.client.chat(
                 model=self.config.model,
@@ -1138,6 +1181,7 @@ def _metrics(journal: Journal, calls: Sequence[Mapping[str, Any]], config: RunCo
             "eval_seconds": eval_ns / 1e9,
             "tokens_per_second": (eval_tokens / (eval_ns / 1e9)) if eval_ns else None,
             "prompt_tokens_peak": max((c.get("prompt_eval_count", 0) for c in mine), default=0),
+            "load_seconds": (mine[0].get("load_duration", 0) / 1e9) if mine else None,
             "thinking_characters": sum(len(c.get("thinking", "")) for c in mine),
         }
     for decision in journal.of_kind(EventKind.GATE_DECISION):
@@ -1224,7 +1268,8 @@ def execute_consumer(
     ``entries`` is S \\ E: the entries of the original run that survive the
     ablation, with their original identifiers. The writer is not re-run; its
     surviving entries are placed into the new journal as state appends. Seed,
-    world and configuration are the original run's. ``run_id`` is required and
+    world and configuration are the original run's, and the consumer starts on
+    a freshly loaded model as the original one did. ``run_id`` is required and
     must differ from the original's, since this is a different run.
     """
     if run_id == ablated_from:
