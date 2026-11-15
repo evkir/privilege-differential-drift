@@ -77,6 +77,7 @@ analysis/tasks.py      the frozen task set and machine-readable mandates
 harness/journal.py     append-only, hash-chained event log of every run
 harness/gate.py        deterministic policy gate; decides D7(i)-(ii)
 harness/executor.py    run executor: writer, shared state, consumer (v0.5, in preparation)
+harness/pilot.py       pilot runner: the runs of §5, the consumer re-run, the pilot table (v0.5, in preparation)
 tests/                 the gate the above must pass
 ```
 
