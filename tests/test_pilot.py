@@ -62,8 +62,9 @@ DOCUMENT = (ROOT / "PREREGISTRATION.md").read_text(encoding="utf-8")
 class Model:
     """Answers from the conversation it is shown; ``consumer`` picks its behaviour per start."""
 
-    def __init__(self, *, writer="append", consumer=("write",), errors=()):
+    def __init__(self, *, writer="append", consumer=("write",), errors=(), call_ids=False):
         self.writer, self.consumer = writer, list(consumer)
+        self.call_ids = call_ids
         self.errors = list(errors)
         self.consumer_starts = 0
         self.chats = 0
@@ -78,7 +79,11 @@ class Model:
     def _reply(self, *calls, text=""):
         return ChatResponse(
             content=text, thinking="",
-            tool_calls=tuple({"function": {"name": n, "arguments": a}} for n, a in calls),
+            tool_calls=tuple(
+                {"function": {"name": n, "arguments": a},
+                 **({"id": f"call_{self.chats}_{i}"} if self.call_ids else {})}
+                for i, (n, a) in enumerate(calls)
+            ),
             done_reason="stop",
             stats={"eval_count": 40, "eval_duration": 2_000_000_000, "prompt_eval_count": 1000,
                    "total_duration": 3_000_000_000, "load_duration": 5_000_000_000},
@@ -193,6 +198,46 @@ def test_a_consumer_that_acts_differently_the_second_time_is_reported(tmp_path):
 def test_a_consumer_that_only_words_a_reply_differently_is_told_apart(tmp_path):
     record = _one(Model(consumer=("write", "wordy")), tmp_path)
     assert record["null"]["same_invocations"] is True and record["null"]["same_replies"] is False
+
+
+def test_an_identifier_the_server_attaches_to_a_call_is_not_part_of_a_reply(tmp_path):
+    record = _one(Model(call_ids=True), tmp_path)
+    run_id = record["run_id"]
+    raw = [
+        [m["tool_calls"] for m in json.loads((tmp_path / f"{stem}.run.json").read_text())
+         ["transcript"]["consumer"]["messages"] if m.get("tool_calls")]
+        for stem in (run_id, f"{run_id}.null")
+    ]
+    assert raw[0] != raw[1] and raw[0][0][0]["function"] == raw[1][0][0]["function"]
+    assert record["null"]["same_invocations"] is True and record["null"]["same_replies"] is True
+
+
+def test_identifiers_do_not_hide_a_reply_that_differs(tmp_path):
+    record = _one(Model(consumer=("write", "write-elsewhere"), call_ids=True), tmp_path)
+    assert record["null"]["same_invocations"] is False and record["null"]["same_replies"] is False
+    record = _one(Model(consumer=("write", "wordy"), call_ids=True), tmp_path / "wordy")
+    assert record["null"]["same_invocations"] is True and record["null"]["same_replies"] is False
+
+
+def test_replies_are_compared_by_text_reasoning_and_parsed_calls():
+    def transcript(*, text="", thinking="", arguments='{"path": "a", "content": "x"}', extra=None):
+        call = {"function": {"name": "fs.write_file", "arguments": arguments}, **(extra or {})}
+        return {
+            "consumer": {"messages": [{"role": "user", "content": "go"},
+                                      {"role": "assistant", "content": text, "tool_calls": [call]}]},
+            "calls": [{"agent": "consumer", "thinking": thinking}],
+        }
+
+    base = pilot.replies_of("r", transcript(), "consumer")
+    assert base == pilot.replies_of("r", transcript(extra={"id": "call_x", "type": "function"}), "consumer")
+    assert base == pilot.replies_of("r", transcript(arguments={"content": "x", "path": "a"}), "consumer")
+    assert base != pilot.replies_of("r", transcript(arguments={"content": "y", "path": "a"}), "consumer")
+    assert base != pilot.replies_of("r", transcript(text="Writing."), "consumer")
+    assert base != pilot.replies_of("r", transcript(thinking="Let me write."), "consumer")
+    broken = transcript()
+    broken["calls"] = []
+    with pytest.raises(PilotError):
+        pilot.replies_of("r", broken, "consumer")
 
 
 def test_a_collapsed_run_has_no_re_run(tmp_path):
@@ -407,6 +452,24 @@ def test_one_re_run_with_other_invocations_blocks_collection():
     assert rule_values(summary)["collection_blocked"] is True
 
 
+def test_the_table_compares_replies_from_the_stored_runs(tmp_path):
+    config = _first("llama3.1")
+    record = _one(Model(call_ids=True), tmp_path, config=config)
+    path = tmp_path / f"{record['run_id']}.pilot.json"
+    stale = json.loads(path.read_text())
+    stale["null"]["same_replies"] = False  # what a pilot run before the comparison was parsed stored
+    path.write_text(json.dumps(stale), encoding="utf-8")
+    assert load_pilot(tmp_path)[0]["null"]["same_replies"] is True
+    assert summarise(load_pilot(tmp_path))["llama3.1"]["null_same_replies"] == 1
+
+    again = tmp_path / f"{record['run_id']}.null.run.json"
+    stored = json.loads(again.read_text())
+    stored["transcript"]["consumer"]["messages"][-1]["content"] += " Indeed."
+    again.write_text(json.dumps(stored), encoding="utf-8")
+    assert load_pilot(tmp_path)[0]["null"]["same_replies"] is False
+    assert json.loads(path.read_text())["null"]["same_replies"] is False  # the record is not rewritten
+
+
 def test_a_blocking_re_run_is_stated_in_the_table(tmp_path):
     _stored(tmp_path, "llama3.1", lambda i, c: Model(consumer=("write", "write-elsewhere") if i == 0 else ("write",)))
     table = render_table(summarise(load_pilot(tmp_path)))
@@ -444,6 +507,35 @@ def test_the_table_can_be_rebuilt_from_what_is_stored(tmp_path, capsys):
     assert "Runs with a pilot record: 10 of 40 planned." in printed
     assert (tmp_path / "pilot-table.md").read_text(encoding="utf-8").strip() == printed.strip()
     assert pilot.main(["--out", str(tmp_path / "empty"), "--table-only"]) == 1
+
+
+def test_the_plan_counted_covers_every_family_stored_or_named(tmp_path, capsys):
+    _stored(tmp_path, "llama3.1", lambda i, c: Model())
+    _stored(tmp_path, "granite4.1", lambda i, c: Model())
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--families", "granite4.1"]) == 0
+    assert "Runs with a pilot record: 20 of 20 planned." in capsys.readouterr().out
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--families", "gemma4"]) == 0
+    assert "Runs with a pilot record: 20 of 40 planned." in capsys.readouterr().out
+
+
+def test_progress_lines_are_flushed_as_they_are_written(monkeypatch):
+    import inspect
+
+    class Stream:
+        def __init__(self):
+            self.text, self.flushes = "", 0
+
+        def write(self, text):
+            self.text += text
+
+        def flush(self):
+            self.flushes += 1
+
+    stream = Stream()
+    monkeypatch.setattr(sys, "stdout", stream)
+    pilot._emit("[1/40] a run")
+    assert stream.text == "[1/40] a run\n" and stream.flushes == 1
+    assert inspect.signature(run_pilot).parameters["emit"].default is pilot._emit
 
 
 def test_no_public_name_in_the_pilot_would_be_collected_as_a_test():

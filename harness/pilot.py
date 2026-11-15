@@ -56,6 +56,7 @@ from executor import (  # noqa: E402
     RunResult,
     Status,
     World,
+    _parse_call,
     derive_seed,
     execute_consumer,
     execute_run,
@@ -80,6 +81,7 @@ __all__ = [
     "pilot_plan",
     "group_label",
     "invocation_sequence",
+    "replies_of",
     "reply_sequence",
     "parse_nvidia_smi",
     "make_probe",
@@ -193,21 +195,39 @@ def invocation_sequence(result: RunResult, agent: str) -> list[tuple[str, str]]:
     ]
 
 
-def reply_sequence(result: RunResult, agent: str) -> list[str]:
-    """Every reply of ``agent`` in full: text, reasoning text and calls, in order."""
-    messages = result.transcript.get(agent, {}).get("messages", [])
+def replies_of(run_id: str, transcript: Mapping[str, Any], agent: str) -> list[str]:
+    """Every reply of ``agent`` in a transcript, in order, each in canonical form.
+
+    A reply is its text, its reasoning text and its calls, each call as the
+    tool and the arguments the executor read from it. The raw call is not
+    compared: a server may attach an identifier of its own to it, which the
+    model did not generate and which differs between two identical replies.
+    """
+    messages = transcript.get(agent, {}).get("messages", [])
     replies = [m for m in messages if m.get("role") == "assistant"]
-    calls = [c for c in result.transcript.get("calls", []) if c["agent"] == agent]
+    calls = [c for c in transcript.get("calls", []) if c["agent"] == agent]
     if len(replies) != len(calls):
-        raise PilotError(f"{result.run_id}: {len(replies)} replies of the {agent} but {len(calls)} calls")
-    return [
-        json.dumps(
-            [reply.get("content", ""), call.get("thinking", ""), reply.get("tool_calls", [])],
-            sort_keys=True,
-            default=str,
+        raise PilotError(f"{run_id}: {len(replies)} replies of the {agent} but {len(calls)} calls")
+    sequence = []
+    for reply, call in zip(replies, calls):
+        parsed = [_parse_call(raw) for raw in reply.get("tool_calls", [])]
+        sequence.append(
+            json.dumps(
+                [
+                    reply.get("content", ""),
+                    call.get("thinking", ""),
+                    [[tool, canonical_json(arguments)] for tool, arguments in parsed],
+                ],
+                sort_keys=True,
+                default=str,
+            )
         )
-        for reply, call in zip(replies, calls)
-    ]
+    return sequence
+
+
+def reply_sequence(result: RunResult, agent: str) -> list[str]:
+    """Every reply of ``agent`` in a run: text, reasoning text and parsed calls, in order."""
+    return replies_of(result.run_id, result.transcript, agent)
 
 
 # ---------------------------------------------------------------------------
@@ -399,6 +419,11 @@ def _progress_line(position: int, total: int, record: Mapping[str, Any]) -> str:
     return line
 
 
+def _emit(line: str) -> None:
+    """Print a progress line at once, also when the output is a pipe."""
+    print(line, flush=True)
+
+
 def run_pilot(
     plan: Sequence[RunConfig],
     client: ChatClient,
@@ -406,7 +431,7 @@ def run_pilot(
     *,
     probe: Callable[[], dict[str, Any]],
     load: Callable[[str], World] = lambda task_id: World.from_json(world_path(task_id)),
-    emit: Callable[[str], None] = print,
+    emit: Callable[[str], None] = _emit,
     retries: int = BACKEND_RETRIES,
     timer: Callable[[], float] = time.monotonic,
     clock: Callable[[], str] | None = None,
@@ -438,6 +463,10 @@ def load_pilot(out: Path) -> list[dict[str, Any]]:
 
     Only the parts of a run's record the table uses are kept, and the
     consumer's gate classifications are not among them.
+
+    Whether a re-run repeats every reply is computed here from the two stored
+    transcripts, not taken from the pilot record, so every stored pilot is
+    reported under the comparison of `replies_of` whenever it was run.
     """
     rows: list[dict[str, Any]] = []
     for path in sorted(Path(out).glob("*.pilot.json")):
@@ -465,6 +494,14 @@ def load_pilot(out: Path) -> list[dict[str, Any]]:
                     for agent in ("writer", "consumer")
                 },
             }
+            null = row["null"]
+            if null is not None and null["status"] != BACKEND_FAILED:
+                again = json.loads(
+                    (path.parent / f"{null['run_id']}.run.json").read_text(encoding="utf-8")
+                )
+                null["same_replies"] = replies_of(
+                    again["run_id"], again["transcript"], "consumer"
+                ) == replies_of(stored["run_id"], stored["transcript"], "consumer")
         rows.append(row)
     return rows
 
@@ -730,7 +767,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not rows:
         print(f"no pilot record in {args.out}", file=sys.stderr)
         return 1
-    table = render_table(summarise(rows), planned=len(plan))
+    present = {row["family"] for row in rows} | set(args.families)
+    planned = len(pilot_plan([label for label in FAMILIES if label in present]))
+    table = render_table(summarise(rows), planned=planned)
     (args.out / "pilot-table.md").write_text(table, encoding="utf-8")
     print(table)
     return 0
