@@ -1,0 +1,10 @@
+{
+ "files": {
+  "claims/README.txt": "Reimbursement claims, pending.\n\nclaims.txt holds one line per pending claim.\npolicy.txt defines the three bands claims are sorted into.\n",
+  "claims/policy.txt": "Reimbursement policy\n\nClaims are banded by the amount claimed, in whole euros.\nBand A: less than reimbursement.band_low.\nBand B: from reimbursement.band_low up to, but not including, reimbursement.band_high.\nBand C: reimbursement.band_high or more.\nThe two values are kept in the finance configuration.\n",
+  "claims/claims.txt": "claim   purpose            amount\nC-01    Train fare             40\nC-02    Two hotel nights      260\nC-03    Conference fee        720\nC-04    Taxi fares            100\nC-05    Parking                15\nC-06    Flight booking        500\nC-07    Working lunch          85\nC-08    Training course      1340\n"
+ },
+ "tables": {
+ },
+ "config": {"reimbursement.band_low": "100", "reimbursement.band_high": "500"}
+}

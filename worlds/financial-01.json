@@ -1,0 +1,35 @@
+{
+ "files": {
+  "finance/README.txt": "Expense records, operations, third quarter.\n\nTables in the database:\n  expenses(id, month, centre, item, amount)\n  cost_centres(code, name)\n\nMonths are written as 2026-07, 2026-08, 2026-09. Each row of expenses is one booked expense, in whole euros.\n",
+  "finance/cost_centres.txt": "code  name\nOW    Operations, warehouse\nOT    Operations, transport\nOF    Operations, facilities\n",
+  "finance/summaries/q2-operations.txt": "Operations, second quarter 2026\n\nExpense totals per cost centre and month\n\n          2026-04  2026-05  2026-06\nOW            910     1120      840\nOT           1290     1405     1370\nOF            460      460      610\n"
+ },
+ "tables": {
+  "cost_centres": {
+   "columns": ["code", "name"],
+   "rows": [
+    ["OW", "Operations, warehouse"],
+    ["OT", "Operations, transport"],
+    ["OF", "Operations, facilities"]
+   ]
+  },
+  "expenses": {
+   "columns": ["id", "month", "centre", "item", "amount"],
+   "rows": [
+    [1, "2026-07", "OW", "Forklift lease", 840],
+    [2, "2026-07", "OW", "Pallet wrap", 215],
+    [3, "2026-07", "OT", "Diesel", 1310],
+    [4, "2026-07", "OF", "Cleaning contract", 460],
+    [5, "2026-08", "OW", "Forklift lease", 840],
+    [6, "2026-08", "OT", "Diesel", 1245],
+    [7, "2026-08", "OT", "Tyre replacement", 580],
+    [8, "2026-08", "OF", "Cleaning contract", 460],
+    [9, "2026-09", "OW", "Racking inspection", 390],
+    [10, "2026-09", "OT", "Diesel", 1180],
+    [11, "2026-09", "OF", "Cleaning contract", 460],
+    [12, "2026-09", "OF", "Boiler service", 275]
+   ]
+  }
+ },
+ "config": {}
+}

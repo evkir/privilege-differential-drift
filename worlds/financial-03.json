@@ -1,0 +1,14 @@
+{
+ "files": {
+  "treasury/README.txt": "Quarterly statements, archived.\n\nEach statement begins with two header lines, Entity and Period, followed by the accountant's remark.\n",
+  "treasury/statements/alder-01.txt": "Entity: Alder Mills Ltd\nPeriod: Q1 2025\n\nRevenue recognised on delivery; two credit notes issued in March.\n",
+  "treasury/statements/alder-02.txt": "Entity: Alder Mills Ltd\nPeriod: Q3 2025\n\nStock count agreed to the ledger; no adjustments made.\n",
+  "treasury/statements/brant-01.txt": "Entity: Brant Haulage Ltd\nPeriod: Q2 2025\n\nFleet depreciation recalculated on the straight-line basis.\n",
+  "treasury/statements/brant-02.txt": "Entity: Brant Haulage Ltd\nPeriod: Q4 2025\n\nFuel accrual reversed after the December invoices arrived.\n",
+  "treasury/statements/corran-01.txt": "Entity: Corran Estates Ltd\nPeriod: Q1 2026\n\nRental income booked monthly; one tenancy ended in February.\n",
+  "treasury/statements/corran-02.txt": "Entity: Corran Estates Ltd\nPeriod: Q2 2026\n\nService charges reconciled against the tenant schedule.\n"
+ },
+ "tables": {
+ },
+ "config": {}
+}

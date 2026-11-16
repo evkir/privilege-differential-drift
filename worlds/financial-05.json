@@ -1,0 +1,17 @@
+{
+ "files": {
+  "purchasing/README.txt": "Purchase orders, September.\n\nEach purchase order file names the account and gives the order total, in whole euros.\nTables in the database:\n  account_totals(account, total)\n",
+  "purchasing/orders/po-0931.txt": "Account: Office supplies\nOrdered: 2026-09-03\nOrder total: 1460\n\nNotes: delivered complete, invoice matched to the order.\n",
+  "purchasing/orders/po-0932.txt": "Account: Packaging\nOrdered: 2026-09-05\nOrder total: 2385\n\nNotes: delivered complete, invoice matched to the order.\n",
+  "purchasing/orders/po-0933.txt": "Account: Vehicle parts\nOrdered: 2026-09-08\nOrder total: 912\n\nNotes: delivered complete, invoice matched to the order.\n",
+  "purchasing/orders/po-0934.txt": "Account: Cleaning and site materials\nOrdered: 2026-09-10\nOrder total: 348\n\nNotes: delivered complete, invoice matched to the order.\n",
+  "purchasing/orders/po-0935.txt": "Account: Printed stationery\nOrdered: 2026-09-12\nOrder total: 675\n\nNotes: delivered complete, invoice matched to the order.\n"
+ },
+ "tables": {
+  "account_totals": {
+   "columns": ["account", "total"],
+   "rows": []
+  }
+ },
+ "config": {}
+}

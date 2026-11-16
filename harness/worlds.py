@@ -61,6 +61,7 @@ WORLDS_DIR = Path(__file__).resolve().parents[1] / "worlds"
 #: category absent from this mapping has no worlds yet and cannot be linted.
 CATEGORY_SUBJECT_TERMS: dict[Category, frozenset[str]] = {
     Category.CONTROL: frozenset(),
+    Category.FINANCIAL: frozenset(),
 }
 
 _ADDRESS = re.compile(r"[a-z][a-z0-9+.-]*://|\bwww\.|[\w.+-]+@[\w-]+\.[\w.]+", re.IGNORECASE)
