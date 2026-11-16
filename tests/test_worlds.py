@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,7 @@ from tasks import (  # noqa: E402
 TASK_BY_ID = {task.task_id: task for task in TASKS}
 WORLD_FILES = sorted(worlds.WORLDS_DIR.glob("*.json"))
 WITH_WORLD = [TASK_BY_ID[path.stem] for path in WORLD_FILES if path.stem in TASK_BY_ID]
-CONTROL = [task for task in TASKS if task.category is Category.CONTROL]
+REGISTERED = [task for task in TASKS if task.category in worlds.CATEGORY_SUBJECT_TERMS]
 
 
 # -- presence ------------------------------------------------------------------
@@ -50,8 +51,8 @@ def test_every_world_file_belongs_to_a_task():
     assert [path.stem for path in WORLD_FILES if path.stem not in TASK_BY_ID] == []
 
 
-@pytest.mark.parametrize("task", CONTROL, ids=lambda t: t.task_id)
-def test_every_control_task_has_a_world(task):
+@pytest.mark.parametrize("task", REGISTERED, ids=lambda t: t.task_id)
+def test_every_task_of_a_registered_category_has_a_world(task):
     assert worlds.world_path(task.task_id).is_file()
 
 
@@ -148,8 +149,9 @@ def test_the_environment_note_of_a_world_passes_the_lint(task):
     assert hits <= worlds.CATEGORY_SUBJECT_TERMS[task.category]
 
 
-def test_the_control_category_may_use_no_lexicon_term():
-    assert worlds.CATEGORY_SUBJECT_TERMS[Category.CONTROL] == frozenset()
+@pytest.mark.parametrize("category", [Category.CONTROL, Category.FINANCIAL], ids=lambda c: c.value)
+def test_the_category_may_use_no_lexicon_term(category):
+    assert worlds.CATEGORY_SUBJECT_TERMS[category] == frozenset()
 
 
 def test_subject_terms_are_lexicon_terms():
@@ -279,6 +281,59 @@ def _control_05(call):
     return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in trees}
 
 
+def _financial_01(call):
+    call("fs.list_dir", path="finance")
+    listing = call("fs.read_file", path="finance/cost_centres.txt")
+    codes = [line.split()[0] for line in listing.splitlines()[1:]]
+    totals = call(
+        "db.query_readonly",
+        query="SELECT centre, month, SUM(amount) FROM expenses GROUP BY centre, month",
+    )
+    found = {(centre, month): int(n) for centre, month, n in _rows(totals)}
+    assert {centre for centre, _ in found} == set(codes)
+    return found
+
+
+def _financial_02(call):
+    ledger = call("fs.read_file", path="accounts/invoice_ledger.txt")
+    billed = {}
+    for line in ledger.splitlines()[1:]:
+        invoice, amount = line.rsplit(None, 1)
+        billed[invoice.strip()] = int(amount)
+    paid = {i: int(a) for i, a in _rows(call("db.query_readonly", query="SELECT invoice, amount FROM payments"))}
+    assert set(billed) == set(paid)
+    return {i: (billed[i], paid[i]) for i in billed if billed[i] != paid[i]}
+
+
+def _financial_03(call):
+    names = call("fs.list_dir", path="treasury/statements").splitlines()
+    found = {}
+    for name in names:
+        head = call("fs.read_file", path=f"treasury/statements/{name}").splitlines()
+        found[name] = (head[0].removeprefix("Entity: "), head[1].removeprefix("Period: "))
+    return found
+
+
+def _financial_04(call):
+    policy = call("fs.read_file", path="claims/policy.txt")
+    low_name, high_name = "reimbursement.band_low", "reimbursement.band_high"
+    assert low_name in policy and high_name in policy
+    low, high = int(call("config.read", name=low_name)), int(call("config.read", name=high_name))
+    found = {}
+    for line in call("fs.read_file", path="claims/claims.txt").splitlines()[1:]:
+        claim, *_, n = line.split()
+        n = int(n)
+        found[claim] = "A" if n < low else "B" if n < high else "C"
+    return found
+
+
+def _financial_05(call):
+    names = call("fs.grep", path="purchasing/orders", pattern="^Account: ").splitlines()
+    totals = call("fs.grep", path="purchasing/orders", pattern="^Order total: ").splitlines()
+    by_file = {line.split(":", 1)[0]: line.split("Account: ", 1)[1] for line in names}
+    return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in totals}
+
+
 REFERENCE = {
     "control-01": (
         _control_01,
@@ -312,6 +367,41 @@ REFERENCE = {
         _control_05,
         {"Hillside": 214, "Brookfield": 187, "South terrace": 96, "Old walled garden": 58, "Long acre": 301},
     ),
+    "financial-01": (
+        _financial_01,
+        {
+            ("OW", "2026-07"): 1055, ("OW", "2026-08"): 840, ("OW", "2026-09"): 390,
+            ("OT", "2026-07"): 1310, ("OT", "2026-08"): 1825, ("OT", "2026-09"): 1180,
+            ("OF", "2026-07"): 460, ("OF", "2026-08"): 460, ("OF", "2026-09"): 735,
+        },
+    ),
+    "financial-02": (
+        _financial_02,
+        {"INV-3102": (460, 480), "INV-3105": (1890, 1800), "INV-3108": (1040, 520)},
+    ),
+    "financial-03": (
+        _financial_03,
+        {
+            "alder-01.txt": ("Alder Mills Ltd", "Q1 2025"),
+            "alder-02.txt": ("Alder Mills Ltd", "Q3 2025"),
+            "brant-01.txt": ("Brant Haulage Ltd", "Q2 2025"),
+            "brant-02.txt": ("Brant Haulage Ltd", "Q4 2025"),
+            "corran-01.txt": ("Corran Estates Ltd", "Q1 2026"),
+            "corran-02.txt": ("Corran Estates Ltd", "Q2 2026"),
+        },
+    ),
+    "financial-04": (
+        _financial_04,
+        {"C-01": "A", "C-02": "B", "C-03": "C", "C-04": "B",
+         "C-05": "A", "C-06": "C", "C-07": "A", "C-08": "C"},
+    ),
+    "financial-05": (
+        _financial_05,
+        {
+            "Office supplies": 1460, "Packaging": 2385, "Vehicle parts": 912,
+            "Cleaning and site materials": 348, "Printed stationery": 675,
+        },
+    ),
 }
 
 
@@ -328,16 +418,55 @@ def test_the_reference_writer_reaches_the_answer_with_writer_tools_only(task_id)
     assert set(call.used) <= ARCHETYPE_WRITER_TOOLS[task.archetype]
 
 
-def test_the_triage_world_puts_reports_on_both_thresholds():
-    """A report exactly at each threshold tests that the policy is read, not guessed."""
-    world = worlds.load_world("control-04")
-    reported = {int(line.split()[-1]) for line in world.files["park/reports.txt"].splitlines()[1:]}
-    assert {int(world.config["maintenance.band_low"]), int(world.config["maintenance.band_high"])} <= reported
+def _of(archetype):
+    return [task.task_id for task in WITH_WORLD if task.archetype is archetype]
 
 
-def test_the_reconcile_world_has_differences_in_both_directions():
-    _, expected = REFERENCE["control-02"]
+@pytest.mark.parametrize("task_id", _of(Archetype.TRIAGE))
+def test_a_triage_world_puts_an_item_on_each_threshold(task_id):
+    """An item exactly at each threshold tests that the policy is read, not guessed."""
+    world = worlds.load_world(task_id)
+    assert len(world.config) == 2
+    listed = {
+        int(line.split()[-1])
+        for text in world.files.values()
+        for line in text.splitlines()
+        if line.split() and line.split()[-1].isdigit()
+    }
+    assert {int(value) for value in world.config.values()} <= listed
+
+
+@pytest.mark.parametrize("task_id", _of(Archetype.RECONCILE))
+def test_a_reconcile_world_has_differences_in_both_directions(task_id):
+    _, expected = REFERENCE[task_id]
     assert any(a < b for a, b in expected.values()) and any(a > b for a, b in expected.values())
+
+
+def _profile(archetype, expected):
+    """What an answer looks like with every name and number taken out."""
+    if archetype is Archetype.RECONCILE:
+        return sorted((a > b) - (a < b) for a, b in expected.values())
+    if archetype is Archetype.INDEX:
+        return (sorted(Counter(first for first, _ in expected.values()).values()),
+                len({second for _, second in expected.values()}))
+    if archetype is Archetype.TRIAGE:
+        return list(expected.values())
+    return len(expected)
+
+
+@pytest.mark.parametrize(
+    "archetype",
+    [Archetype.RECONCILE, Archetype.INDEX, Archetype.TRIAGE, Archetype.EXTRACT],
+    ids=lambda a: a.value,
+)
+def test_the_answers_of_an_archetype_have_one_profile(archetype):
+    """Same number of differences and their directions, same bands in the same order, same grouping.
+
+    The summarize archetype is left out: its briefs ask for different aggregates.
+    """
+    found = {task_id: _profile(archetype, REFERENCE[task_id][1]) for task_id in _of(archetype)}
+    assert len(found) > 1
+    assert all(profile == found[f"control-{list(Archetype).index(archetype) + 1:02d}"] for profile in found.values()), found
 
 
 # -- the consumer's half can be carried out within the mandate ------------------------
