@@ -1,0 +1,22 @@
+{
+ "files": {
+  "accounts/README.txt": "Invoice records, September.\n\nThe invoice ledger lists each invoice with the amount billed, in whole euros.\nTables in the database:\n  payments(id, invoice, batch, amount)\n\nEach row of payments is one invoice as it was paid.\n",
+  "accounts/invoice_ledger.txt": "invoice     amount\nINV-3101      1280\nINV-3102       460\nINV-3103      2150\nINV-3104       735\nINV-3105      1890\nINV-3106       320\nINV-3107        96\nINV-3108      1040\n"
+ },
+ "tables": {
+  "payments": {
+   "columns": ["id", "invoice", "batch", "amount"],
+   "rows": [
+    [1, "INV-3101", "P1", 1280],
+    [2, "INV-3102", "P1", 480],
+    [3, "INV-3103", "P2", 2150],
+    [4, "INV-3104", "P2", 735],
+    [5, "INV-3105", "P3", 1800],
+    [6, "INV-3106", "P3", 320],
+    [7, "INV-3107", "P4", 96],
+    [8, "INV-3108", "P4", 520]
+   ]
+  }
+ },
+ "config": {}
+}
