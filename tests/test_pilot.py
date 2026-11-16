@@ -163,6 +163,11 @@ def test_the_pilot_settings_are_the_ones_the_document_registers():
 def _recorded_pilot():
     """The groups of the pilot table recorded in §5, as far as the rules read them."""
     block = DOCUMENT.split("**Pilot result.**", 1)[1].split("**Check of the amended briefs.**", 1)[0]
+    return (block, *_table_groups(block))
+
+
+def _table_groups(block):
+    """The cells of the one table in ``block``, and its groups as far as the rules read them."""
     rows = [
         [cell.strip() for cell in line.strip("|").split("|")]
         for line in block.splitlines() if line.startswith("|")
@@ -176,6 +181,7 @@ def _recorded_pilot():
         most = value("Most model calls by an agent in a completed run")
         same = value("Re-runs repeating the sequence of invocations")
         groups[label] = {
+            "runs": runs,
             "family": family, "think": {"": None, "on": True, "off": False}[mode],
             "collapse_share": Fraction(round(float(value("Collapse share")) * runs), runs),
             "longest_reply": int(value("Longest reply, tokens")),
@@ -184,7 +190,7 @@ def _recorded_pilot():
             "null_runs": nulls,
             "null_same_invocations": 0 if same == "n/a" else round(float(same) * nulls),
         }
-    return block, cells, groups
+    return cells, groups
 
 
 def test_the_recorded_rule_values_are_what_the_rules_give_on_the_recorded_table():
@@ -233,6 +239,50 @@ def test_the_check_of_the_amended_briefs_is_the_twelve_runs_section_5_registers(
         (family, {"off": False}.get(rules["reasoning_mode"].get(family)))
         for family, verdict in rules["family_replacement"].items() if verdict.startswith("keep")
     }
+
+
+def test_the_recorded_result_of_the_check_is_what_the_rules_give_over_pilot_and_check():
+    block = DOCUMENT.split("**Result of the check.**", 1)[1].split("**Statistical plan.**", 1)[0]
+    cells, check = _table_groups(block)
+    assert set(check) == {pilot.group_label(family, think) for family, think in pilot.BRIEF_CHECK_MODELS}
+    assert sum(g["runs"] for g in check.values()) == len(pilot.brief_check_plan()) == 12
+    merged = dict(_recorded_pilot()[2])
+    for label, extra in check.items():
+        base = merged[label]
+        runs = base["runs"] + extra["runs"]
+        collapsed = base["collapse_share"] * base["runs"] + extra["collapse_share"] * extra["runs"]
+        merged[label] = {
+            **base, "runs": runs, "collapse_share": Fraction(collapsed) / runs,
+            "longest_reply": max(base["longest_reply"], extra["longest_reply"]),
+            "prompt_peak": max(base["prompt_peak"], extra["prompt_peak"]),
+            "most_calls_completed": max(base["most_calls_completed"], extra["most_calls_completed"]),
+            "null_runs": base["null_runs"] + extra["null_runs"],
+            "null_same_invocations": base["null_same_invocations"] + extra["null_same_invocations"],
+        }
+    assert sum(g["runs"] for g in merged.values()) == 82
+    rules, before = rule_values(merged), rule_values(_recorded_pilot()[2])
+    for key in ("reasoning_mode", "reply_length_limit", "context_size", "step_limit", "collection_blocked"):
+        assert rules[key] == before[key]
+    assert {f: v.split()[0] for f, v in rules["family_replacement"].items()} == {
+        f: v.split()[0] for f, v in before["family_replacement"].items()}
+    for family, mode in rules["reasoning_mode"].items():
+        assert f"- Reasoning mode of {family}: {mode}\n" in block
+    for family, verdict in rules["family_replacement"].items():
+        assert f"- Family replacement, {family}: {verdict}\n" in block
+    for line in (
+        f"- Reply-length limit: {rules['reply_length_limit']} tokens (longest reply {rules['longest_reply']})",
+        f"- Context size: {rules['context_size']} tokens",
+        f"- Step limit: {rules['step_limit']} (most model calls by an agent in a completed run: "
+        f"{rules['most_calls_completed']})",
+        f"- Reproducibility of the consumer: 0 of {rules['null_runs']} re-runs differ in their invocations "
+        "— does not block collection",
+        "over the pilot and the check, 82 runs",
+    ):
+        assert line in block
+    idle = [round(float(share) * 4) for share in cells["Completed runs in which the consumer made no call"]]
+    assert sum(idle) == 1 and "no call in 1 of the 12 runs, a run of `granite4.1:8b`" in block
+    assert idle[cells["Measured"].index("granite4.1")] == 1
+    assert set(cells["Re-runs repeating every reply in full"]) == {"1.00"}
 
 
 def test_an_unknown_family_is_refused():
