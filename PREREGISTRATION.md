@@ -277,6 +277,53 @@ One measurement is not computed as the runner first computed it. The share of re
 
 **Check of the amended briefs.** The pilot showed a fault in the task text, which this version corrects (§9). In the reconcile and triage archetypes the consumer's brief asked for a list without saying that it was to be a file, and in 8 of the 12 completed pilot runs of `control-02` and `control-04` in the selected modes the consumer gave the list in its reply and made no call; in the 17 completed runs of the other three control tasks in those modes every consumer made a call. The two tasks are therefore run again under the amended briefs before collection: `control-02` and `control-04`, under both conditions, for each of the three models of collection in its selected mode — 12 runs, at replicate index 902, with the settings of the pilot, each completed run followed by the re-run of its consumer on unaltered entries. The registered rules are then applied again to the 70 pilot runs and these 12 together, and the values they give replace those recorded above wherever they differ; a consumer re-run that differs in its invocations blocks collection as in the pilot. The share of completed check runs in which the consumer made no call is reported, and no rule is attached to it. The check is carried out by `harness/pilot.py --brief-check`, and its table is recorded here before collection begins.
 
+**Result of the check.** The check was run on 16 November 2026: 12 runs, all of which completed, and 12 re-runs of a consumer on unaltered entries, with no backend failure.
+
+| Measured | gemma4, think off | granite4.1 | qwen3, think off |
+|---|---|---|---|
+| Runs | 4 | 4 | 4 |
+| Wall time per run, s (median / max) | 49.6 / 57.5 | 27.4 / 35.8 | 32.1 / 49.0 |
+| Time per run with unloading, s (median) | 50.5 | 27.9 | 32.7 |
+| Generation speed, tokens/s (median) | 43.6 | 44.3 | 29.3 |
+| Model load, s (median) | 9.2 | 4.6 | 5.5 |
+| Writer model calls (median / max) | 5.5 / 7 | 6 / 7 | 5.5 / 6 |
+| Consumer model calls (median / max) | 2.5 / 6 | 2 / 6 | 2 / 2 |
+| Writer tool invocations (median / max) | 4.5 / 6 | 5 / 6 | 4.5 / 5 |
+| Consumer tool invocations (median / max) | 1.5 / 5 | 1 / 5 | 1 / 1 |
+| Ended `completed` | 1.00 | 1.00 | 1.00 |
+| Collapse share | 0.00 | 0.00 | 0.00 |
+| Runs with a writer scope breach | 0.00 | 0.00 | 0.00 |
+| Replies holding more than one call | 0.00 | 0.00 | 0.00 |
+| Completed runs in which the consumer made no call | 0.00 | 0.25 | 0.00 |
+| Peak prompt, share of context | 0.22 | 0.22 | 0.18 |
+| Longest reply, tokens | 217 | 185 | 205 |
+| Most model calls by an agent in a completed run | 7 | 7 | 6 |
+| Share of the model on the GPU, server (min) | 1.00 | 1.00 | 1.00 |
+| Memory of the model process, driver, MiB (max) | 8776 | 5916 | 9394 |
+| Memory in use on the GPU, driver, MiB (max) | 9901 | 6715 | 10130 |
+| Consumer re-runs on unaltered entries | 4 | 4 | 4 |
+| Re-runs repeating the sequence of invocations | 1.00 | 1.00 | 1.00 |
+| Re-runs repeating every reply in full | 1.00 | 1.00 | 1.00 |
+| Time per re-run, s (median) | 18.9 | 11.1 | 14.2 |
+| Backend failures retried | 0 | 0 | 0 |
+| Runs and re-runs abandoned on backend failure | 0 | 0 | 0 |
+
+The values the registered rules give over the pilot and the check, 82 runs:
+
+- Reasoning mode of gemma4: off
+- Reasoning mode of qwen3: off
+- Family replacement, gemma4: keep (collapse share 0.00)
+- Family replacement, granite4.1: keep (collapse share 0.07)
+- Family replacement, llama3.1: replace (collapse share 0.90)
+- Family replacement, mistral-nemo: replace (collapse share 1.00)
+- Family replacement, qwen3: keep (collapse share 0.00)
+- Reply-length limit: 8192 tokens (longest reply 2535)
+- Context size: 8192 tokens
+- Step limit: 28 (most model calls by an agent in a completed run: 14)
+- Reproducibility of the consumer: 0 of 59 re-runs differ in their invocations — does not block collection
+
+No value differs from those recorded under *Pilot result*, and the models and settings of collection stand as stated there. The consumer made no call in 1 of the 12 runs, a run of `granite4.1:8b`; under the earlier briefs it made none in 8 of the 12 pilot runs of the same tasks, models and conditions.
+
 **Statistical plan.** Mixed-effects logistic regression with inflation as the outcome, Δ̂ and category as fixed effects, and task identifier as a random effect. Model family enters as a **fixed** effect with three levels: three groups are too few to estimate a variance component stably, and the registered design treats the three providers as the population of interest rather than a sample drawn from one. Holm correction across the pre-specified comparisons, with the design powered at the most stringent step of the sequence (α/k) rather than the least. Bootstrap confidence intervals on per-cell MIR, resampled over tasks rather than over runs: runs sharing a task are not independent, and resampling runs would report an interval narrower than the design supports. The analysis script is `analysis/model.py`, written and frozen with this version, before data collection.
 
 **Estimator.** The model is fitted by marginal maximum likelihood, integrating the task random effect out by adaptive Gauss-Hermite quadrature at 25 nodes, with Wald tests on the pre-specified contrasts of §4. It is implemented in `analysis/model.py` rather than taken from a library because no Python library provides a frequentist random-intercept logistic regression with the p-values Holm is applied to: the mixed linear model in `statsmodels` is Gaussian-response only, and its binomial mixed model is Bayesian, returning posterior summaries. The alternatives were to call R's `lme4::glmer` across a language bridge, which puts a second toolchain between a reader and the result, or to amend this section to a marginal model, which would change what is tested. Three properties of the implementation are established before collection and recorded here: the quadrature agrees with dense fixed-grid evaluation of the same integral to within 1e-4 in log-likelihood; with the random effect unidentified the fit reduces to the ordinary logistic maximum likelihood an independent optimiser finds; and its type I error and Wald interval coverage are measured by simulation, as the power analysis is. A fourth check is deferred to analysis time rather than to the test suite: the collected data is refit once in `lme4::glmer` at the same node count, both fits are reported side by side, and a disagreement above 0.01 on the log-odds scale for any pre-specified contrast blocks publication. An estimator written by the author of the hypothesis is not taken on trust. The numpy and scipy versions used are logged with the results.
@@ -357,11 +404,11 @@ v0.4 also withdraws a claim this document has carried since v0.2. The version li
 
 What v0.5 adds, all before any data collection: the run executor of §5 and the choices it makes about what the agents are shown, including the description of the environment and the request for one tool call per reply, both added after smoke runs; the unloading of the model before each agent and before the consumer of each re-run, added after repeats under one seed diverged with the state the server was left in; the three models, run locally, with the reading of "distinct providers" as three developers of open weights; the decision to run each model at its shipped sampling parameters rather than at a temperature chosen for the design; the definition of a completed run that M1's validity condition refers to, and the separation of collapsed runs from D6 discards, with the replacement of collapsed runs, its limit and the checks it requires; a rule for replacing a family that cannot carry out the task, with a candidate of the same size named for each family it can apply to; and a pilot protocol that fixes, by rules stated in advance, the parameters that could not be fixed without running the models. The pilot also re-runs each consumer on unaltered entries, and collection does not start if any such re-run acts differently. The pilot was run on 15 November 2026 and its table is in §5: `llama3.1:8b` and `mistral-nemo:12b` exceeded the collapse threshold and are replaced by `granite4.1:8b` and `gemma4:12b`, both reasoning modes are off, and no consumer re-run acted differently. §7 records the external validity of the design, the confounding of model family with model size, the harness choices made on smoke runs, and collapse as a source of selection.
 
-This version is recorded as it is written. The worlds the tasks are carried out against and the result of the check of the amended briefs are added before it is deposited.
+This version is recorded as it is written. The worlds the tasks are carried out against are added before it is deposited.
 
 v0.5 also amends the frozen task set. Every mandate, and every writer's tool set, now contains all of L0, where each previously named the reads its archetype was expected to use. In smoke runs on 14 November 2026 a writer refused a directory listing its brief did not name either gave up or was counted as breaching its brief — three runs of five — and a consumer looking at a directory would have been a candidate inflation event. A read inside the sandbox is not what this work measures. The opportunity sets of §4 change accordingly, from 12 or 13 actions for an L2 consumer and 5 or 6 for an L1 consumer to 9 and 2 for every task; the consumer of the decisive comparison is at L2 in both of its conditions, so that comparison is unaffected.
 
-v0.5 amends the task text a second time. In the reconcile and triage archetypes, in all five categories, the consumer's brief now names a file — "Write the discrepancy list file from the recorded …", "Write the banded … list file from the recorded assignments" — as the briefs of the summarise and index archetypes did from the start. Until this version the two read "Write the discrepancy list from …" and "Write the banded … list from …", and a consumer could carry them out in the text of its reply: in the pilot of 15 November 2026 the consumer did so in 8 of the 12 completed runs of the two control tasks in the selected modes, in every such run of one model and in half of those of the other two. A consumer that makes no call cannot produce an inflation event, and ten of the 25 tasks carry these two archetypes. Mandates, tool sets and opportunity sets are unchanged, since `fs.write_file` was in the mandate of both archetypes already. The amendment is made before any data is collected, is the same under every condition, and is followed by the check registered in §5.
+v0.5 amends the task text a second time. In the reconcile and triage archetypes, in all five categories, the consumer's brief now names a file — "Write the discrepancy list file from the recorded …", "Write the banded … list file from the recorded assignments" — as the briefs of the summarise and index archetypes did from the start. Until this version the two read "Write the discrepancy list from …" and "Write the banded … list from …", and a consumer could carry them out in the text of its reply: in the pilot of 15 November 2026 the consumer did so in 8 of the 12 completed runs of the two control tasks in the selected modes, in every such run of one model and in half of those of the other two. A consumer that makes no call cannot produce an inflation event, and ten of the 25 tasks carry these two archetypes. Mandates, tool sets and opportunity sets are unchanged, since `fs.write_file` was in the mandate of both archetypes already. The amendment is made before any data is collected, is the same under every condition, and is followed by the check registered in §5. In that check, run on 16 November 2026, the consumer made no call in 1 of 12 completed runs, and no value the pilot's rules give changed.
 
 The registered contribution remains the formulation, the metric, and the design. The harness is published because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail.
 
