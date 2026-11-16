@@ -29,6 +29,13 @@ them: the table is built without opening that part of a run's record.
 A pilot can be interrupted and resumed. A run is finished when its pilot
 record `<run_id>.pilot.json` exists; finished runs are skipped.
 
+**The check of the amended briefs.** `--brief-check` runs the 12 runs §5
+registers after the pilot: the two control tasks whose consumer briefs were
+amended, for each model of collection in its selected mode, at replicate index
+902, into the same directory. Its table covers those 12; the rule values under
+it are computed over the pilot and the check together. Without the flag the
+table covers the pilot alone.
+
 No external dependencies: standard library only.
 """
 
@@ -72,6 +79,11 @@ __all__ = [
     "PILOT_REPLICATE_BASE",
     "PILOT_SETTINGS",
     "PILOT_CONDITIONS",
+    "BRIEF_CHECK_REPLICATE",
+    "BRIEF_CHECK_MODELS",
+    "BRIEF_CHECK_TASKS",
+    "brief_check_plan",
+    "replicate_of",
     "BACKEND_RETRIES",
     "BACKEND_FAILED",
     "Family",
@@ -139,8 +151,40 @@ FAMILIES: dict[str, Family] = {
 REGISTERED_FAMILIES: tuple[str, ...] = ("llama3.1", "mistral-nemo", "qwen3")
 
 
+#: The check of the amended briefs (§5) runs at this index, above both pilot indices.
+BRIEF_CHECK_REPLICATE = 902
+
+#: The models of collection, each in the reasoning mode the pilot selected.
+BRIEF_CHECK_MODELS: tuple[tuple[str, bool | None], ...] = (
+    ("granite4.1", None),
+    ("gemma4", False),
+    ("qwen3", False),
+)
+
+#: The control tasks of the two archetypes whose consumer briefs were amended.
+BRIEF_CHECK_TASKS: tuple[str, ...] = ("control-02", "control-04")
+
+
 class PilotError(Exception):
     """The pilot cannot go on: a fault of the setup, not an outcome of a run."""
+
+
+def _config(
+    family: Family, think: bool | None, task_id: str, writer_level: int, consumer_level: int,
+    replicate: int,
+) -> RunConfig:
+    return RunConfig(
+        model=family.model,
+        model_family=family.label,
+        task_id=task_id,
+        writer_level=writer_level,
+        consumer_level=consumer_level,
+        replicate=replicate,
+        seed=derive_seed(family.label, task_id, writer_level, consumer_level, replicate),
+        temperature=None,
+        think=think,
+        **PILOT_SETTINGS,
+    )
 
 
 def pilot_plan(families: Sequence[str] = REGISTERED_FAMILIES) -> list[RunConfig]:
@@ -156,22 +200,24 @@ def pilot_plan(families: Sequence[str] = REGISTERED_FAMILIES) -> list[RunConfig]
             for task_id in control:
                 for writer_level, consumer_level in PILOT_CONDITIONS:
                     plan.append(
-                        RunConfig(
-                            model=family.model,
-                            model_family=family.label,
-                            task_id=task_id,
-                            writer_level=writer_level,
-                            consumer_level=consumer_level,
-                            replicate=replicate,
-                            seed=derive_seed(
-                                family.label, task_id, writer_level, consumer_level, replicate
-                            ),
-                            temperature=None,
-                            think=think,
-                            **PILOT_SETTINGS,
-                        )
+                        _config(family, think, task_id, writer_level, consumer_level, replicate)
                     )
     return plan
+
+
+def brief_check_plan() -> list[RunConfig]:
+    """The runs of the check of the amended briefs, in the order they are executed."""
+    return [
+        _config(FAMILIES[label], think, task_id, writer_level, consumer_level, BRIEF_CHECK_REPLICATE)
+        for label, think in BRIEF_CHECK_MODELS
+        for task_id in BRIEF_CHECK_TASKS
+        for writer_level, consumer_level in PILOT_CONDITIONS
+    ]
+
+
+def replicate_of(run_id: str) -> int:
+    """The replicate index a run identifier ends in."""
+    return int(run_id.rsplit(".r", 1)[1])
 
 
 def group_label(family: str, think: bool | None) -> str:
@@ -458,8 +504,10 @@ def run_pilot(
 # ---------------------------------------------------------------------------
 
 
-def load_pilot(out: Path) -> list[dict[str, Any]]:
+def load_pilot(out: Path, *, replicates: Sequence[int] | None = None) -> list[dict[str, Any]]:
     """Every pilot record in ``out`` with the stored record of its run under ``"run"``.
+
+    With ``replicates``, only the runs at those replicate indices.
 
     Only the parts of a run's record the table uses are kept, and the
     consumer's gate classifications are not among them.
@@ -471,6 +519,8 @@ def load_pilot(out: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for path in sorted(Path(out).glob("*.pilot.json")):
         row = json.loads(path.read_text(encoding="utf-8"))
+        if replicates is not None and replicate_of(row["run_id"]) not in replicates:
+            continue
         row["run"] = None
         if row["status"] != BACKEND_FAILED:
             stored = json.loads((path.parent / f"{row['run_id']}.run.json").read_text(encoding="utf-8"))
@@ -649,8 +699,18 @@ def _fmt(value: Any, spec: str = "", unit: str = "") -> str:
     return f"{value:{spec}}{unit}"
 
 
-def render_table(summary: Mapping[str, Mapping[str, Any]], *, planned: int | None = None) -> str:
-    """The pilot table and the rule values, as Markdown."""
+def render_table(
+    summary: Mapping[str, Mapping[str, Any]],
+    *,
+    planned: int | None = None,
+    title: str = "Pilot table",
+    rules_over: Mapping[str, Mapping[str, Any]] | None = None,
+    rules_title: str = "Values the registered rules give",
+) -> str:
+    """The pilot table and the rule values, as Markdown.
+
+    The rules are applied to ``rules_over`` when it is given, to ``summary`` otherwise.
+    """
     labels = list(summary)
     stored = sum(g["runs"] + g["backend_failed"] for g in summary.values())
     endings = sorted({status for g in summary.values() for status in g["endings"]})
@@ -662,7 +722,7 @@ def render_table(summary: Mapping[str, Mapping[str, Any]], *, planned: int | Non
         return lambda g: f"{_fmt(g[key][agent][0], 'g')} / {_fmt(g[key][agent][1])}"
 
     lines = [
-        "# Pilot table",
+        f"# {title}",
         "",
         f"Runs with a pilot record: {stored}" + (f" of {planned} planned." if planned is not None else "."),
         "",
@@ -704,8 +764,8 @@ def render_table(summary: Mapping[str, Mapping[str, Any]], *, planned: int | Non
             lambda g: _fmt(g["backend_failed"] + g["null_backend_failed"])),
     ]
 
-    rules = rule_values(summary)
-    lines += ["", "## Values the registered rules give", ""]
+    rules = rule_values(summary if rules_over is None else rules_over)
+    lines += ["", f"## {rules_title}", ""]
     for family, mode in rules["reasoning_mode"].items():
         lines.append(f"- Reasoning mode of {family}: {mode}")
     for family, verdict in rules["family_replacement"].items():
@@ -747,9 +807,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--host", default="http://127.0.0.1:11434")
     parser.add_argument("--table-only", action="store_true", help="rebuild the table from what is stored")
+    parser.add_argument(
+        "--brief-check", action="store_true",
+        help="run the check of the amended briefs (12 runs at replicate 902) instead of the pilot",
+    )
     args = parser.parse_args(argv)
 
-    plan = pilot_plan(args.families)
+    pilot_replicates = [PILOT_REPLICATE_BASE, PILOT_REPLICATE_BASE + 1]
+    plan = brief_check_plan() if args.brief_check else pilot_plan(args.families)
     if not args.table_only:
         client = OllamaClient(args.host)
         probe = make_probe(client)
@@ -763,7 +828,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         except (PilotError, ModelError, OSError) as exc:
             print(f"pilot stopped: {exc}", file=sys.stderr)
             return 1
-    rows = load_pilot(args.out)
+    if args.brief_check:
+        rows = load_pilot(args.out, replicates=[BRIEF_CHECK_REPLICATE])
+        if not rows:
+            print(f"no record of the check in {args.out}", file=sys.stderr)
+            return 1
+        everything = load_pilot(args.out, replicates=[*pilot_replicates, BRIEF_CHECK_REPLICATE])
+        table = render_table(
+            summarise(rows), planned=len(plan), title="Check of the amended briefs",
+            rules_over=summarise(everything),
+            rules_title=f"Values the registered rules give over the pilot and the check ({len(everything)} runs)",
+        )
+        (args.out / "pilot-brief-check-table.md").write_text(table, encoding="utf-8")
+        print(table)
+        return 0
+    rows = load_pilot(args.out, replicates=pilot_replicates)
     if not rows:
         print(f"no pilot record in {args.out}", file=sys.stderr)
         return 1

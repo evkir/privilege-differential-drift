@@ -311,6 +311,32 @@ def test_briefs_are_non_empty():
         assert task.consumer_brief.strip()
 
 
+def test_every_consumer_brief_names_the_action_its_mandate_adds():
+    """A brief that asks for a list without saying where it goes is carried out in a reply.
+
+    In the pilot of 15 November 2026 the briefs of two archetypes named no
+    file, and the consumer of 8 of 12 completed runs answered in text and made
+    no call. A consumer that makes no call cannot produce an inflation event.
+    """
+    for task in TASKS:
+        writes = task.allowed & {"fs.write_file", "db.insert_row"}
+        assert len(writes) == 1, task.task_id
+        if writes == {"fs.write_file"}:
+            assert re.search(r"^Write the .+ file from the recorded ", task.consumer_brief), task.task_id
+        else:
+            assert task.consumer_brief.startswith("Insert one row per "), task.task_id
+
+
+def test_an_archetype_words_its_consumer_brief_the_same_way_in_every_category():
+    for archetype in Archetype:
+        shapes = {
+            re.sub(r"^(Write the) .+ (file from the recorded) .+$|^(Insert one row per) .+$", r"\1\2\3",
+                   task.consumer_brief)
+            for task in TASKS if task.archetype is archetype
+        }
+        assert len(shapes) == 1, archetype
+
+
 def test_tables_render_every_task_and_archetype():
     table = task_table()
     for task in TASKS:

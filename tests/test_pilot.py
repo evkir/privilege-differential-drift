@@ -162,7 +162,7 @@ def test_the_pilot_settings_are_the_ones_the_document_registers():
 
 def _recorded_pilot():
     """The groups of the pilot table recorded in §5, as far as the rules read them."""
-    block = DOCUMENT.split("**Pilot result.**", 1)[1].split("**Statistical plan.**", 1)[0]
+    block = DOCUMENT.split("**Pilot result.**", 1)[1].split("**Check of the amended briefs.**", 1)[0]
     rows = [
         [cell.strip() for cell in line.strip("|").split("|")]
         for line in block.splitlines() if line.startswith("|")
@@ -212,6 +212,27 @@ def test_the_recorded_rule_values_are_what_the_rules_give_on_the_recorded_table(
     ):
         assert line in block
     assert set(cells["Re-runs repeating every reply in full"]) == {"1.00", "n/a"}
+
+
+def test_the_check_of_the_amended_briefs_is_the_twelve_runs_section_5_registers():
+    plan = pilot.brief_check_plan()
+    assert len(plan) == 12 and {c.replicate for c in plan} == {pilot.BRIEF_CHECK_REPLICATE} == {902}
+    assert {c.task_id for c in plan} == {"control-02", "control-04"}
+    assert {(c.model, c.think) for c in plan} == {
+        ("granite4.1:8b", None), ("gemma4:12b", False), ("qwen3:14b", False)}
+    assert {(c.writer_level, c.consumer_level) for c in plan} == {(0, 2), (1, 2)}
+    assert all((c.num_ctx, c.num_predict, c.max_steps) == (8192, 4096, 32) for c in plan)
+    everything = pilot_plan(sorted(FAMILIES)) + plan
+    assert len({pilot.run_id_for(c) for c in everything}) == len({c.seed for c in everything}) == 82
+    check = DOCUMENT.split("**Check of the amended briefs.**", 1)[1].split("**Statistical plan.**", 1)[0]
+    for needle in ("`control-02` and `control-04`", "12 runs, at replicate index 902",
+                   "the 70 pilot runs and these 12 together"):
+        assert needle in check
+    rules = rule_values(_recorded_pilot()[2])
+    assert set(pilot.BRIEF_CHECK_MODELS) == {
+        (family, {"off": False}.get(rules["reasoning_mode"].get(family)))
+        for family, verdict in rules["family_replacement"].items() if verdict.startswith("keep")
+    }
 
 
 def test_an_unknown_family_is_refused():
@@ -590,6 +611,33 @@ def test_progress_lines_are_flushed_as_they_are_written(monkeypatch):
     pilot._emit("[1/40] a run")
     assert stream.text == "[1/40] a run\n" and stream.flushes == 1
     assert inspect.signature(run_pilot).parameters["emit"].default is pilot._emit
+
+
+def test_the_check_has_its_own_table_and_leaves_the_pilot_table_as_it_was(tmp_path, capsys):
+    _stored(tmp_path, "granite4.1", lambda i, c: Model())
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--families", "granite4.1"]) == 0
+    before = capsys.readouterr().out
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--brief-check"]) == 1
+    capsys.readouterr()
+
+    for index, config in enumerate(pilot.brief_check_plan()):
+        _one(Model(writer="loop" if index == 0 else "append"), tmp_path, config=config)
+    assert pilot.replicate_of("qwen3.control-02.02.r902") == 902
+    assert len(load_pilot(tmp_path)) == 22 and len(load_pilot(tmp_path, replicates=[902])) == 12
+    assert len(load_pilot(tmp_path, replicates=[900, 901])) == 10
+
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--brief-check"]) == 0
+    printed = capsys.readouterr().out
+    assert printed.startswith("# Check of the amended briefs\n\nRuns with a pilot record: 12 of 12 planned.")
+    assert "| Measured | gemma4, think off | granite4.1 | qwen3, think off |" in printed
+    assert "## Values the registered rules give over the pilot and the check (22 runs)" in printed
+    # the writer that ran to the pilot's step limit is not a completed run; granite's ten are
+    assert "- Family replacement, granite4.1: keep (collapse share 0.07)" in printed
+    assert (tmp_path / "pilot-brief-check-table.md").read_text(encoding="utf-8").strip() == printed.strip()
+
+    assert pilot.main(["--out", str(tmp_path), "--table-only", "--families", "granite4.1"]) == 0
+    assert capsys.readouterr().out == before
+    assert (tmp_path / "pilot-table.md").read_text(encoding="utf-8").strip() == before.strip()
 
 
 def test_no_public_name_in_the_pilot_would_be_collected_as_a_test():
