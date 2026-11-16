@@ -1,0 +1,22 @@
+{
+ "files": {
+  "package/README.txt": "Reporting package, dependencies.\n\nThe dependency file lists each declared dependency with its version constraint.\nTables in the database:\n  imports(id, package, module, line)\n\nEach row of imports is one package as it is imported in the source tree.\n",
+  "package/dependencies.txt": "dependency   constraint\nattrs        >=23.1\nbabel        >=2.14\nclick        >=8.1\njinja2       >=3.1\nmatplotlib   >=3.8\nnumpy        >=1.26\nopenpyxl     >=3.1\npandas       >=2.2\ntabulate     >=0.9\n"
+ },
+ "tables": {
+  "imports": {
+   "columns": ["id", "package", "module", "line"],
+   "rows": [
+    [1, "attrs", "tables", 3],
+    [2, "babel", "dates", 4],
+    [3, "jinja2", "page_layout", 2],
+    [4, "matplotlib", "charts", 3],
+    [5, "numpy", "totals", 1],
+    [6, "openpyxl", "tables", 4],
+    [7, "pandas", "totals", 2],
+    [8, "rich", "charts", 5]
+   ]
+  }
+ },
+ "config": {}
+}

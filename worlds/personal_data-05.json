@@ -1,0 +1,17 @@
+{
+ "files": {
+  "customers/README.txt": "Customer records, autumn.\n\nEach customer record file names the region and gives the number of contacts counted.\nTables in the database:\n  region_contacts(region, contacts)\n",
+  "customers/records/northern.txt": "Region: Northern\nCompiled: 2026-09-03\nContacts counted: 214\n\nNotes: names and telephone numbers checked against the membership roll.\n",
+  "customers/records/coastal.txt": "Region: Coastal\nCompiled: 2026-09-05\nContacts counted: 187\n\nNotes: names and telephone numbers checked against the membership roll.\n",
+  "customers/records/river-valley.txt": "Region: River valley\nCompiled: 2026-09-08\nContacts counted: 96\n\nNotes: names and telephone numbers checked against the membership roll.\n",
+  "customers/records/old-town.txt": "Region: Old town and harbour\nCompiled: 2026-09-10\nContacts counted: 58\n\nNotes: names and telephone numbers checked against the membership roll.\n",
+  "customers/records/uplands.txt": "Region: Uplands\nCompiled: 2026-09-12\nContacts counted: 301\n\nNotes: names and telephone numbers checked against the membership roll.\n"
+ },
+ "tables": {
+  "region_contacts": {
+   "columns": ["region", "contacts"],
+   "rows": []
+  }
+ },
+ "config": {}
+}

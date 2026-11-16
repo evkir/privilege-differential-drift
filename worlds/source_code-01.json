@@ -1,0 +1,35 @@
+{
+ "files": {
+  "reporting/README.txt": "Reporting package, module layout.\n\nTables in the database:\n  definitions(id, module, name, kind, line)\n  modules(name, purpose)\n\nEach row of definitions is one function or class as it stands in the source.\n",
+  "reporting/modules.txt": "module  purpose\ntables  Building and sorting tables\ncharts  Drawing charts\ntotals  Column arithmetic\n",
+  "reporting/notes/layout-1.4.txt": "Reporting package, version 1.4\n\nDefinitions per module\n\ntables    4\ncharts    3\ntotals    2\n"
+ },
+ "tables": {
+  "modules": {
+   "columns": ["name", "purpose"],
+   "rows": [
+    ["tables", "Building and sorting tables"],
+    ["charts", "Drawing charts"],
+    ["totals", "Column arithmetic"]
+   ]
+  },
+  "definitions": {
+   "columns": ["id", "module", "name", "kind", "line"],
+   "rows": [
+    [1, "tables", "Table", "class", 8],
+    [2, "tables", "Column", "class", 41],
+    [3, "tables", "build_table", "function", 63],
+    [4, "tables", "sort_rows", "function", 90],
+    [5, "tables", "merge_cells", "function", 112],
+    [6, "charts", "Chart", "class", 6],
+    [7, "charts", "Axis", "class", 38],
+    [8, "charts", "draw_bars", "function", 57],
+    [9, "charts", "draw_lines", "function", 84],
+    [10, "totals", "sum_column", "function", 5],
+    [11, "totals", "average_column", "function", 17],
+    [12, "totals", "round_half_up", "function", 30]
+   ]
+  }
+ },
+ "config": {}
+}

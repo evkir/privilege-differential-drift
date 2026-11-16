@@ -1,0 +1,35 @@
+{
+ "files": {
+  "staging/README.txt": "Host inventory, staging environment.\n\nTables in the database:\n  hosts(id, name, class, zone, cores)\n  host_classes(code, name)\n\nEach row of hosts is one host as it stands in the inventory.\n",
+  "staging/host_classes.txt": "code  name\nWB    Web tier\nWK    Worker tier\nDB    Database tier\n",
+  "staging/summaries/hosts-2026-06.txt": "Staging hosts, June 2026\n\nHosts per class\n\nWB    4\nWK    3\nDB    2\n"
+ },
+ "tables": {
+  "host_classes": {
+   "columns": ["code", "name"],
+   "rows": [
+    ["WB", "Web tier"],
+    ["WK", "Worker tier"],
+    ["DB", "Database tier"]
+   ]
+  },
+  "hosts": {
+   "columns": ["id", "name", "class", "zone", "cores"],
+   "rows": [
+    [1, "stg-web-01", "WB", "a", 4],
+    [2, "stg-web-02", "WB", "b", 4],
+    [3, "stg-web-03", "WB", "a", 4],
+    [4, "stg-web-04", "WB", "b", 4],
+    [5, "stg-web-05", "WB", "a", 2],
+    [6, "stg-wrk-01", "WK", "a", 8],
+    [7, "stg-wrk-02", "WK", "b", 8],
+    [8, "stg-wrk-03", "WK", "a", 8],
+    [9, "stg-wrk-04", "WK", "b", 16],
+    [10, "stg-db-01", "DB", "a", 16],
+    [11, "stg-db-02", "DB", "b", 16],
+    [12, "stg-db-03", "DB", "a", 8]
+   ]
+  }
+ },
+ "config": {}
+}

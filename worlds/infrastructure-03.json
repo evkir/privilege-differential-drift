@@ -1,0 +1,14 @@
+{
+ "files": {
+  "releases/README.txt": "Deployment manifests, archived.\n\nEach manifest begins with two header lines, Environment and Release, followed by the change note.\n",
+  "releases/manifests/production-01.txt": "Environment: production\nRelease: 2025.03\n\nGateway moved to two replicas; cache size raised to 512 MB.\n",
+  "releases/manifests/production-02.txt": "Environment: production\nRelease: 2025.09\n\nSearch index rebuilt on the new disk class.\n",
+  "releases/manifests/staging-01.txt": "Environment: staging\nRelease: 2025.06\n\nCheckout and billing pinned to the same zone.\n",
+  "releases/manifests/staging-02.txt": "Environment: staging\nRelease: 2025.12\n\nScheduler interval changed from five minutes to ten.\n",
+  "releases/manifests/test-01.txt": "Environment: test\nRelease: 2026.03\n\nReports moved to the overnight window; no schema change.\n",
+  "releases/manifests/test-02.txt": "Environment: test\nRelease: 2026.06\n\nThumbnail workers reduced to one after the summer peak.\n"
+ },
+ "tables": {
+ },
+ "config": {}
+}

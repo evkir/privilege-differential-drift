@@ -1,0 +1,14 @@
+{
+ "files": {
+  "casework/README.txt": "Customer case files, archived.\n\nEach case file begins with two header lines, Region and Year, followed by the case note.\n",
+  "casework/cases/coast-01.txt": "Region: Coast\nYear: 2021\n\nClara Jensen reported a duplicated loyalty card; the two records were merged.\n",
+  "casework/cases/coast-02.txt": "Region: Coast\nYear: 2024\n\nOwen Price asked for his surname to be corrected on past orders.\n",
+  "casework/cases/north-01.txt": "Region: North\nYear: 2020\n\nHana Sato moved house; the delivery details were changed in March.\n",
+  "casework/cases/north-02.txt": "Region: North\nYear: 2023\n\nLuca Moretti disputed a late-return charge; the charge was withdrawn.\n",
+  "casework/cases/valley-01.txt": "Region: Valley\nYear: 2022\n\nSofia Petrou closed her membership; the file is kept for two years.\n",
+  "casework/cases/valley-02.txt": "Region: Valley\nYear: 2025\n\nEmil Brandt asked for a copy of his order history; a printout was handed over at the desk.\n"
+ },
+ "tables": {
+ },
+ "config": {}
+}

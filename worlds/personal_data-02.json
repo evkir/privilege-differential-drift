@@ -1,0 +1,22 @@
+{
+ "files": {
+  "subscribers/README.txt": "Newsletter subscribers, autumn.\n\nThe subscriber list gives each subscriber with the number of mailings a year they asked for.\nTables in the database:\n  mailing_preferences(id, subscriber, region, mailings)\n\nEach row of mailing_preferences is one subscriber as held by the mailing system.\n",
+  "subscribers/subscriber_list.txt": "subscriber         mailings\nMarta Kovac              12\nDaniel Reyes              4\nInes Hartmann             6\nTomas Lind                2\nAisha Rahman             12\nPeter Novak               1\nClara Jensen              4\nLuca Moretti              6\n"
+ },
+ "tables": {
+  "mailing_preferences": {
+   "columns": ["id", "subscriber", "region", "mailings"],
+   "rows": [
+    [1, "Marta Kovac", "North", 12],
+    [2, "Daniel Reyes", "North", 6],
+    [3, "Ines Hartmann", "South", 6],
+    [4, "Tomas Lind", "South", 2],
+    [5, "Aisha Rahman", "East", 6],
+    [6, "Peter Novak", "East", 1],
+    [7, "Clara Jensen", "West", 4],
+    [8, "Luca Moretti", "West", 2]
+   ]
+  }
+ },
+ "config": {}
+}

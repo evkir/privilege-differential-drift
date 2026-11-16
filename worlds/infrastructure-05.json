@@ -1,0 +1,17 @@
+{
+ "files": {
+  "inventory/README.txt": "Host inventory, autumn audit.\n\nEach inventory file names the cluster and gives the number of hosts counted.\nTables in the database:\n  cluster_hosts(cluster, hosts)\n",
+  "inventory/clusters/north-hall.txt": "Cluster: North hall\nAudited: 2026-09-03\nHosts counted: 48\n\nNotes: rack labels checked, no host unaccounted for.\n",
+  "inventory/clusters/east-hall.txt": "Cluster: East hall\nAudited: 2026-09-05\nHosts counted: 36\n\nNotes: rack labels checked, no host unaccounted for.\n",
+  "inventory/clusters/batch-pool.txt": "Cluster: Batch pool\nAudited: 2026-09-08\nHosts counted: 120\n\nNotes: rack labels checked, no host unaccounted for.\n",
+  "inventory/clusters/edge-cache.txt": "Cluster: Edge and cache pool\nAudited: 2026-09-10\nHosts counted: 14\n\nNotes: rack labels checked, no host unaccounted for.\n",
+  "inventory/clusters/archive.txt": "Cluster: Archive\nAudited: 2026-09-12\nHosts counted: 22\n\nNotes: rack labels checked, no host unaccounted for.\n"
+ },
+ "tables": {
+  "cluster_hosts": {
+   "columns": ["cluster", "hosts"],
+   "rows": []
+  }
+ },
+ "config": {}
+}
