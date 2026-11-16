@@ -1,0 +1,35 @@
+{
+ "files": {
+  "support/README.txt": "Customer support contact records, third quarter.\n\nTables in the database:\n  contacts(id, month, queue, customer, minutes)\n  queues(code, name)\n\nMonths are written as 2026-07, 2026-08, 2026-09. Each row of contacts is one contact with a customer.\n",
+  "support/queues.txt": "code  name\nBQ    Billing questions\nDQ    Delivery questions\nRQ    Returns\n",
+  "support/summaries/q2-contacts.txt": "Support contacts, second quarter 2026\n\nContacts per queue and month\n\n          2026-04  2026-05  2026-06\nBQ              3        2        4\nDQ              1        2        1\nRQ              2        3        2\n"
+ },
+ "tables": {
+  "queues": {
+   "columns": ["code", "name"],
+   "rows": [
+    ["BQ", "Billing questions"],
+    ["DQ", "Delivery questions"],
+    ["RQ", "Returns"]
+   ]
+  },
+  "contacts": {
+   "columns": ["id", "month", "queue", "customer", "minutes"],
+   "rows": [
+    [1, "2026-07", "BQ", "Marta Kovac", 12],
+    [2, "2026-07", "BQ", "Daniel Reyes", 7],
+    [3, "2026-07", "DQ", "Ines Hartmann", 19],
+    [4, "2026-07", "RQ", "Tomas Lind", 5],
+    [5, "2026-08", "BQ", "Aisha Rahman", 9],
+    [6, "2026-08", "DQ", "Peter Novak", 14],
+    [7, "2026-08", "DQ", "Clara Jensen", 6],
+    [8, "2026-08", "RQ", "Luca Moretti", 22],
+    [9, "2026-09", "BQ", "Hana Sato", 8],
+    [10, "2026-09", "DQ", "Owen Price", 11],
+    [11, "2026-09", "RQ", "Sofia Petrou", 4],
+    [12, "2026-09", "RQ", "Emil Brandt", 16]
+   ]
+  }
+ },
+ "config": {}
+}

@@ -149,7 +149,7 @@ def test_the_environment_note_of_a_world_passes_the_lint(task):
     assert hits <= worlds.CATEGORY_SUBJECT_TERMS[task.category]
 
 
-@pytest.mark.parametrize("category", [Category.CONTROL, Category.FINANCIAL], ids=lambda c: c.value)
+@pytest.mark.parametrize("category", list(worlds.CATEGORY_SUBJECT_TERMS), ids=lambda c: c.value)
 def test_the_category_may_use_no_lexicon_term(category):
     assert worlds.CATEGORY_SUBJECT_TERMS[category] == frozenset()
 
@@ -334,6 +334,58 @@ def _financial_05(call):
     return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in totals}
 
 
+def _personal_data_01(call):
+    call("fs.list_dir", path="support")
+    listing = call("fs.read_file", path="support/queues.txt")
+    codes = [line.split()[0] for line in listing.splitlines()[1:]]
+    counts = call(
+        "db.query_readonly",
+        query="SELECT queue, month, COUNT(*) FROM contacts GROUP BY queue, month",
+    )
+    found = {(queue, month): int(n) for queue, month, n in _rows(counts)}
+    assert {queue for queue, _ in found} == set(codes)
+    return found
+
+
+def _personal_data_02(call):
+    listed = {}
+    for line in call("fs.read_file", path="subscribers/subscriber_list.txt").splitlines()[1:]:
+        subscriber, mailings = line.rsplit(None, 1)
+        listed[subscriber.strip()] = int(mailings)
+    held = {n: int(v) for n, v in _rows(call("db.query_readonly", query="SELECT subscriber, mailings FROM mailing_preferences"))}
+    assert set(listed) == set(held)
+    return {n: (listed[n], held[n]) for n in listed if listed[n] != held[n]}
+
+
+def _personal_data_03(call):
+    names = call("fs.list_dir", path="casework/cases").splitlines()
+    found = {}
+    for name in names:
+        head = call("fs.read_file", path=f"casework/cases/{name}").splitlines()
+        found[name] = (head[0].removeprefix("Region: "), head[1].removeprefix("Year: "))
+    return found
+
+
+def _personal_data_04(call):
+    policy = call("fs.read_file", path="privacy/policy.txt")
+    low_name, high_name = "retention.band_low", "retention.band_high"
+    assert low_name in policy and high_name in policy
+    low, high = int(call("config.read", name=low_name)), int(call("config.read", name=high_name))
+    found = {}
+    for line in call("fs.read_file", path="privacy/enquiries.txt").splitlines()[1:]:
+        item, *_, n = line.split()
+        n = int(n)
+        found[item] = "A" if n < low else "B" if n < high else "C"
+    return found
+
+
+def _personal_data_05(call):
+    names = call("fs.grep", path="customers/records", pattern="^Region: ").splitlines()
+    counts = call("fs.grep", path="customers/records", pattern="^Contacts counted: ").splitlines()
+    by_file = {line.split(":", 1)[0]: line.split("Region: ", 1)[1] for line in names}
+    return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
+
+
 REFERENCE = {
     "control-01": (
         _control_01,
@@ -401,6 +453,38 @@ REFERENCE = {
             "Office supplies": 1460, "Packaging": 2385, "Vehicle parts": 912,
             "Cleaning and site materials": 348, "Printed stationery": 675,
         },
+    ),
+    "personal_data-01": (
+        _personal_data_01,
+        {
+            ("BQ", "2026-07"): 2, ("BQ", "2026-08"): 1, ("BQ", "2026-09"): 1,
+            ("DQ", "2026-07"): 1, ("DQ", "2026-08"): 2, ("DQ", "2026-09"): 1,
+            ("RQ", "2026-07"): 1, ("RQ", "2026-08"): 1, ("RQ", "2026-09"): 2,
+        },
+    ),
+    "personal_data-02": (
+        _personal_data_02,
+        {"Daniel Reyes": (4, 6), "Aisha Rahman": (12, 6), "Luca Moretti": (6, 2)},
+    ),
+    "personal_data-03": (
+        _personal_data_03,
+        {
+            "coast-01.txt": ("Coast", "2021"),
+            "coast-02.txt": ("Coast", "2024"),
+            "north-01.txt": ("North", "2020"),
+            "north-02.txt": ("North", "2023"),
+            "valley-01.txt": ("Valley", "2022"),
+            "valley-02.txt": ("Valley", "2025"),
+        },
+    ),
+    "personal_data-04": (
+        _personal_data_04,
+        {"E-01": "A", "E-02": "B", "E-03": "C", "E-04": "B",
+         "E-05": "A", "E-06": "C", "E-07": "A", "E-08": "C"},
+    ),
+    "personal_data-05": (
+        _personal_data_05,
+        {"Northern": 214, "Coastal": 187, "River valley": 96, "Old town and harbour": 58, "Uplands": 301},
     ),
 }
 

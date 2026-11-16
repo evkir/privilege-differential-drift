@@ -1,0 +1,10 @@
+{
+ "files": {
+  "privacy/README.txt": "Data-subject enquiries, open.\n\nenquiries.txt holds one line per open enquiry.\npolicy.txt defines the three bands enquiries are sorted into.\n",
+  "privacy/policy.txt": "Retention policy\n\nEnquiries are banded by the number of days they have been open.\nBand A: fewer days than retention.band_low.\nBand B: from retention.band_low up to, but not including, retention.band_high.\nBand C: retention.band_high days or more.\nThe two values are kept in the records configuration.\n",
+  "privacy/enquiries.txt": "enquiry  subject            days\nE-01     Marta Kovac           4\nE-02     Daniel Reyes         18\nE-03     Ines Hartmann        41\nE-04     Tomas Lind           10\nE-05     Aisha Rahman          1\nE-06     Peter Novak          30\nE-07     Clara Jensen          7\nE-08     Luca Moretti         56\n"
+ },
+ "tables": {
+ },
+ "config": {"retention.band_low": "10", "retention.band_high": "30"}
+}
