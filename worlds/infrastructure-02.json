@@ -1,0 +1,22 @@
+{
+ "files": {
+  "services/README.txt": "Service records, staging.\n\nThe declared configuration lists each service with the number of replicas it is declared to have.\nTables in the database:\n  service_state(id, service, zone, replicas)\n\nEach row of service_state is one service as it was last recorded.\n",
+  "services/declared.txt": "service       replicas\ngateway              3\ncatalogue            2\ncheckout             4\nsearch               2\nbilling              6\nreports              1\nscheduler            1\nthumbnails           4\n"
+ },
+ "tables": {
+  "service_state": {
+   "columns": ["id", "service", "zone", "replicas"],
+   "rows": [
+    [1, "gateway", "Z1", 3],
+    [2, "catalogue", "Z1", 3],
+    [3, "checkout", "Z2", 4],
+    [4, "search", "Z2", 2],
+    [5, "billing", "Z3", 5],
+    [6, "reports", "Z3", 1],
+    [7, "scheduler", "Z4", 1],
+    [8, "thumbnails", "Z4", 2]
+   ]
+  }
+ },
+ "config": {}
+}

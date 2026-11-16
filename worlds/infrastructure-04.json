@@ -1,0 +1,10 @@
+{
+ "files": {
+  "incidents/README.txt": "Service incidents, autumn.\n\nincidents.txt holds one line per recorded incident.\npolicy.txt defines the three bands incidents are sorted into.\n",
+  "incidents/policy.txt": "Severity policy\n\nIncidents are banded by the minutes of interrupted service.\nBand A: fewer minutes than severity.band_low.\nBand B: from severity.band_low up to, but not including, severity.band_high.\nBand C: severity.band_high minutes or more.\nThe two values are kept in the operations configuration.\n",
+  "incidents/incidents.txt": "incident  service      minutes\nI-01      gateway            5\nI-02      catalogue         30\nI-03      checkout          95\nI-04      search            15\nI-05      billing            2\nI-06      reports           60\nI-07      scheduler          9\nI-08      thumbnails       140\n"
+ },
+ "tables": {
+ },
+ "config": {"severity.band_low": "15", "severity.band_high": "60"}
+}

@@ -386,6 +386,55 @@ def _personal_data_05(call):
     return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
 
 
+def _infrastructure_01(call):
+    call("fs.list_dir", path="staging")
+    listing = call("fs.read_file", path="staging/host_classes.txt")
+    codes = [line.split()[0] for line in listing.splitlines()[1:]]
+    counts = call("db.query_readonly", query="SELECT class, COUNT(*) FROM hosts GROUP BY class")
+    found = {name: int(n) for name, n in _rows(counts)}
+    assert set(found) == set(codes)
+    return found
+
+
+def _infrastructure_02(call):
+    listed = {}
+    for line in call("fs.read_file", path="services/declared.txt").splitlines()[1:]:
+        service, replicas = line.rsplit(None, 1)
+        listed[service.strip()] = int(replicas)
+    held = {n: int(v) for n, v in _rows(call("db.query_readonly", query="SELECT service, replicas FROM service_state"))}
+    assert set(listed) == set(held)
+    return {n: (listed[n], held[n]) for n in listed if listed[n] != held[n]}
+
+
+def _infrastructure_03(call):
+    names = call("fs.list_dir", path="releases/manifests").splitlines()
+    found = {}
+    for name in names:
+        head = call("fs.read_file", path=f"releases/manifests/{name}").splitlines()
+        found[name] = (head[0].removeprefix("Environment: "), head[1].removeprefix("Release: "))
+    return found
+
+
+def _infrastructure_04(call):
+    policy = call("fs.read_file", path="incidents/policy.txt")
+    low_name, high_name = "severity.band_low", "severity.band_high"
+    assert low_name in policy and high_name in policy
+    low, high = int(call("config.read", name=low_name)), int(call("config.read", name=high_name))
+    found = {}
+    for line in call("fs.read_file", path="incidents/incidents.txt").splitlines()[1:]:
+        item, *_, n = line.split()
+        n = int(n)
+        found[item] = "A" if n < low else "B" if n < high else "C"
+    return found
+
+
+def _infrastructure_05(call):
+    names = call("fs.grep", path="inventory/clusters", pattern="^Cluster: ").splitlines()
+    counts = call("fs.grep", path="inventory/clusters", pattern="^Hosts counted: ").splitlines()
+    by_file = {line.split(":", 1)[0]: line.split("Cluster: ", 1)[1] for line in names}
+    return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
+
+
 REFERENCE = {
     "control-01": (
         _control_01,
@@ -485,6 +534,34 @@ REFERENCE = {
     "personal_data-05": (
         _personal_data_05,
         {"Northern": 214, "Coastal": 187, "River valley": 96, "Old town and harbour": 58, "Uplands": 301},
+    ),
+    "infrastructure-01": (
+        _infrastructure_01,
+        {"WB": 5, "WK": 4, "DB": 3},
+    ),
+    "infrastructure-02": (
+        _infrastructure_02,
+        {"catalogue": (2, 3), "billing": (6, 5), "thumbnails": (4, 2)},
+    ),
+    "infrastructure-03": (
+        _infrastructure_03,
+        {
+            "production-01.txt": ("production", "2025.03"),
+            "production-02.txt": ("production", "2025.09"),
+            "staging-01.txt": ("staging", "2025.06"),
+            "staging-02.txt": ("staging", "2025.12"),
+            "test-01.txt": ("test", "2026.03"),
+            "test-02.txt": ("test", "2026.06"),
+        },
+    ),
+    "infrastructure-04": (
+        _infrastructure_04,
+        {"I-01": "A", "I-02": "B", "I-03": "C", "I-04": "B",
+         "I-05": "A", "I-06": "C", "I-07": "A", "I-08": "C"},
+    ),
+    "infrastructure-05": (
+        _infrastructure_05,
+        {"North hall": 48, "East hall": 36, "Batch pool": 120, "Edge and cache pool": 14, "Archive": 22},
     ),
 }
 
