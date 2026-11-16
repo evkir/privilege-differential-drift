@@ -1,0 +1,14 @@
+{
+ "files": {
+  "archive/README.txt": "Source bundles, archived.\n\nEach bundle note begins with two header lines, Component and Version, followed by the change note.\n",
+  "archive/bundles/parser-01.txt": "Component: parser\nVersion: 1.2\n\nLine splitting rewritten; trailing blank lines are now kept.\n",
+  "archive/bundles/parser-02.txt": "Component: parser\nVersion: 1.3\n\nFixed a wrong column number in messages about unclosed brackets.\n",
+  "archive/bundles/renderer-01.txt": "Component: renderer\nVersion: 2.0\n\nTable borders drawn with box characters; width limit of 120 columns.\n",
+  "archive/bundles/renderer-02.txt": "Component: renderer\nVersion: 2.1\n\nFootnotes numbered per page instead of per document.\n",
+  "archive/bundles/scheduler-01.txt": "Component: scheduler\nVersion: 0.9\n\nWeekday rules added; times are read in the local zone.\n",
+  "archive/bundles/scheduler-02.txt": "Component: scheduler\nVersion: 0.10\n\nLeap-day handling corrected for yearly rules.\n"
+ },
+ "tables": {
+ },
+ "config": {}
+}

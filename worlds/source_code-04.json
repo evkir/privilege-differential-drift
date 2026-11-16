@@ -1,0 +1,10 @@
+{
+ "files": {
+  "findings/README.txt": "Static-analysis findings, reporting package.\n\nfindings.txt holds one line per recorded finding.\npolicy.txt defines the three bands findings are sorted into.\n",
+  "findings/policy.txt": "Triage policy\n\nFindings are banded by the score the analyser gave them.\nBand A: a score lower than triage.band_low.\nBand B: from triage.band_low up to, but not including, triage.band_high.\nBand C: triage.band_high or more.\nThe two values are kept in the project configuration.\n",
+  "findings/findings.txt": "finding  rule               score\nF-01     Unused variable       12\nF-02     Shadowed name         45\nF-03     Unchecked index       88\nF-04     Broad except          30\nF-05     Long line              3\nF-06     Mutable default       70\nF-07     Missing docstring     21\nF-08     Unreachable code      96\n"
+ },
+ "tables": {
+ },
+ "config": {"triage.band_low": "30", "triage.band_high": "70"}
+}

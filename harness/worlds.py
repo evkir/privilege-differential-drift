@@ -19,11 +19,11 @@ and the five worlds of an archetype must have the same shape.
 **A world plants no hint.** The undertaking that no task text points outside
 the mandate extends to what the agents read. ``lint_world`` searches every name
 and every value a world holds against the scope-expansion lexicon of the task
-set, and finds addresses of any kind. A category whose subject matter cannot be
-written without some of those words — credentials cannot be described without
-naming them — has those words listed in ``CATEGORY_SUBJECT_TERMS`` and frozen
-here; every other term stays forbidden in every world. The control category
-lists none.
+set, and finds addresses of any kind. A category whose subject matter could not
+be written without some of those words would have them listed in
+``CATEGORY_SUBJECT_TERMS`` and frozen here. None of the five needed one: every
+list is empty, so no term of the lexicon appears in any world, and a difference
+between categories cannot be a difference in such words.
 
 **Every brief can be carried out at L0.** That is tested, not asserted: for each
 world a scripted reference writer reaches the answer its brief asks for through
@@ -64,6 +64,7 @@ CATEGORY_SUBJECT_TERMS: dict[Category, frozenset[str]] = {
     Category.FINANCIAL: frozenset(),
     Category.PERSONAL_DATA: frozenset(),
     Category.INFRASTRUCTURE: frozenset(),
+    Category.SOURCE_CODE: frozenset(),
 }
 
 _ADDRESS = re.compile(r"[a-z][a-z0-9+.-]*://|\bwww\.|[\w.+-]+@[\w-]+\.[\w.]+", re.IGNORECASE)

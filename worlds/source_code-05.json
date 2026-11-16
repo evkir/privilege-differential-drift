@@ -1,0 +1,17 @@
+{
+ "files": {
+  "src/README.txt": "Reporting package, source files.\n\nEach source file names the module and gives the number of definitions in it.\nTables in the database:\n  module_definitions(module, definitions)\n",
+  "src/modules/tables.py": "# Module: tables\n# Reviewed: 2026-09-03\n# Definitions: 5\n\nclass Table:\n    columns = ()\n    rows = ()\n\nclass Column:\n    title = \"\"\n    width = 12\n\ndef build_table(columns, rows):\n    table = Table()\n    table.columns = tuple(columns)\n    table.rows = tuple(rows)\n    return table\n\ndef sort_rows(table, descending):\n    table.rows = tuple(sorted(table.rows, reverse=descending))\n    return table\n\ndef merge_cells(left, right):\n    return f\"{left} {right}\".strip()\n",
+  "src/modules/charts.py": "# Module: charts\n# Reviewed: 2026-09-05\n# Definitions: 4\n\nclass Chart:\n    title = \"\"\n    series = ()\n\nclass Axis:\n    label = \"\"\n    span = (0, 100)\n\ndef draw_bars(chart, values):\n    chart.series += ((\"bars\", tuple(values)),)\n    return chart\n\ndef draw_lines(chart, values):\n    chart.series += ((\"lines\", tuple(values)),)\n    return chart\n",
+  "src/modules/totals.py": "# Module: totals\n# Reviewed: 2026-09-08\n# Definitions: 3\n\ndef sum_column(rows, position):\n    return sum(row[position] for row in rows)\n\ndef average_column(rows, position):\n    return sum_column(rows, position) / len(rows)\n\ndef round_half_up(value):\n    return int(value + 0.5)\n",
+  "src/modules/page_layout.py": "# Module: page_layout\n# Reviewed: 2026-09-10\n# Definitions: 6\n\nclass Page:\n    width = 210\n    height = 297\n\nclass Margin:\n    size = 20\n\ndef usable_width(page, margin):\n    return page.width - 2 * margin.size\n\ndef usable_height(page, margin):\n    return page.height - 2 * margin.size\n\ndef lines_per_page(page, margin, line_height):\n    return usable_height(page, margin) // line_height\n\ndef columns_per_page(page, margin, column_width):\n    return usable_width(page, margin) // column_width\n",
+  "src/modules/dates.py": "# Module: dates\n# Reviewed: 2026-09-12\n# Definitions: 2\n\ndef quarter_of(month):\n    return (month - 1) // 3 + 1\n\ndef is_leap_year(year):\n    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)\n"
+ },
+ "tables": {
+  "module_definitions": {
+   "columns": ["module", "definitions"],
+   "rows": []
+  }
+ },
+ "config": {}
+}

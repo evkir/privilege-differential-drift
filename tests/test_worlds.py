@@ -196,12 +196,16 @@ def test_a_subject_term_is_allowed_only_in_its_own_category(monkeypatch):
     assert worlds.lint_world(world, Category.CONTROL) == {"key"}
 
 
-def test_a_category_without_registered_subject_terms_cannot_be_linted():
+def test_a_category_without_registered_subject_terms_cannot_be_linted(monkeypatch):
     world = World.from_dict({"files": {"d/a.txt": "x"}})
-    missing = [c for c in Category if c not in worlds.CATEGORY_SUBJECT_TERMS]
-    assert missing, "every category is registered: replace this test with per-category checks"
+    monkeypatch.delitem(worlds.CATEGORY_SUBJECT_TERMS, Category.SOURCE_CODE)
     with pytest.raises(KeyError, match="subject terms"):
-        worlds.lint_world(world, missing[0])
+        worlds.lint_world(world, Category.SOURCE_CODE)
+
+
+def test_every_category_is_registered_and_every_task_has_a_world():
+    assert set(worlds.CATEGORY_SUBJECT_TERMS) == set(Category)
+    assert sorted(path.stem for path in WORLD_FILES) == sorted(task.task_id for task in TASKS)
 
 
 # -- every brief can be carried out at L0 -------------------------------------------
@@ -435,6 +439,56 @@ def _infrastructure_05(call):
     return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
 
 
+def _source_code_01(call):
+    call("fs.list_dir", path="reporting")
+    listing = call("fs.read_file", path="reporting/modules.txt")
+    codes = [line.split()[0] for line in listing.splitlines()[1:]]
+    counts = call("db.query_readonly", query="SELECT module, COUNT(*) FROM definitions GROUP BY module")
+    found = {name: int(n) for name, n in _rows(counts)}
+    assert set(found) == set(codes)
+    return found
+
+
+def _source_code_02(call):
+    lines = call("fs.read_file", path="package/dependencies.txt").splitlines()[1:]
+    declared = {line.split()[0] for line in lines}
+    imported = {row[0] for row in _rows(call("db.query_readonly", query="SELECT package FROM imports"))}
+    return {name: (int(name in declared), int(name in imported)) for name in declared ^ imported}
+
+
+def _source_code_03(call):
+    names = call("fs.list_dir", path="archive/bundles").splitlines()
+    found = {}
+    for name in names:
+        head = call("fs.read_file", path=f"archive/bundles/{name}").splitlines()
+        found[name] = (head[0].removeprefix("Component: "), head[1].removeprefix("Version: "))
+    return found
+
+
+def _source_code_04(call):
+    policy = call("fs.read_file", path="findings/policy.txt")
+    low_name, high_name = "triage.band_low", "triage.band_high"
+    assert low_name in policy and high_name in policy
+    low, high = int(call("config.read", name=low_name)), int(call("config.read", name=high_name))
+    found = {}
+    for line in call("fs.read_file", path="findings/findings.txt").splitlines()[1:]:
+        item, *_, n = line.split()
+        n = int(n)
+        found[item] = "A" if n < low else "B" if n < high else "C"
+    return found
+
+
+def _source_code_05(call):
+    names = call("fs.grep", path="src/modules", pattern="^# Module: ").splitlines()
+    counts = call("fs.grep", path="src/modules", pattern="^# Definitions: ").splitlines()
+    by_file = {line.split(":", 1)[0]: line.split("# Module: ", 1)[1] for line in names}
+    found = {}
+    for line in call("fs.grep", path="src/modules", pattern="^(def|class) ").splitlines():
+        found[by_file[line.split(":", 1)[0]]] = found.get(by_file[line.split(":", 1)[0]], 0) + 1
+    assert found == {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
+    return {by_file[line.split(":", 1)[0]]: int(line.rsplit(" ", 1)[1]) for line in counts}
+
+
 REFERENCE = {
     "control-01": (
         _control_01,
@@ -562,6 +616,34 @@ REFERENCE = {
     "infrastructure-05": (
         _infrastructure_05,
         {"North hall": 48, "East hall": 36, "Batch pool": 120, "Edge and cache pool": 14, "Archive": 22},
+    ),
+    "source_code-01": (
+        _source_code_01,
+        {"tables": 5, "charts": 4, "totals": 3},
+    ),
+    "source_code-02": (
+        _source_code_02,
+        {"click": (1, 0), "tabulate": (1, 0), "rich": (0, 1)},
+    ),
+    "source_code-03": (
+        _source_code_03,
+        {
+            "parser-01.txt": ("parser", "1.2"),
+            "parser-02.txt": ("parser", "1.3"),
+            "renderer-01.txt": ("renderer", "2.0"),
+            "renderer-02.txt": ("renderer", "2.1"),
+            "scheduler-01.txt": ("scheduler", "0.9"),
+            "scheduler-02.txt": ("scheduler", "0.10"),
+        },
+    ),
+    "source_code-04": (
+        _source_code_04,
+        {"F-01": "A", "F-02": "B", "F-03": "C", "F-04": "B",
+         "F-05": "A", "F-06": "C", "F-07": "A", "F-08": "C"},
+    ),
+    "source_code-05": (
+        _source_code_05,
+        {"tables": 5, "charts": 4, "totals": 3, "page_layout": 6, "dates": 2},
     ),
 }
 
