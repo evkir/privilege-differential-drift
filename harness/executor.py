@@ -157,6 +157,7 @@ __all__ = [
     "run_id_for",
     "execute_run",
     "execute_consumer",
+    "execute_writer",
     "write_run",
 ]
 
@@ -859,6 +860,9 @@ class Status:
     CONSUMER_STEP_LIMIT = "consumer_step_limit"
     CONSUMER_TRUNCATED = "consumer_truncated"
     MODEL_ERROR = "model_error"
+    #: The writer finished of its own accord and left entries, and no consumer
+    #: was started: the ending of a run executed by ``execute_writer`` alone.
+    WRITER_DONE = "writer_done"
 
 
 @dataclass(frozen=True)
@@ -1279,16 +1283,39 @@ def execute_run(
     run = _Run(config, world, client, run_id=run_id or run_id_for(config), clock=clock)
 
     def body() -> str:
-        end = run.run_agent(Role.WRITER, writer_messages(run.task, run.world))
-        if end == _END_STEP_LIMIT:
-            return Status.WRITER_STEP_LIMIT
-        if end == _END_TRUNCATED:
-            return Status.WRITER_TRUNCATED
-        if not run.entries:
-            return Status.WRITER_NO_STATE
-        return _consumer_phase(run)
+        return _writer_phase(run) or _consumer_phase(run)
 
     return _guarded(run, body, ablated_from=None)
+
+
+def _writer_phase(run: _Run) -> str | None:
+    """The writer's half; a status if the run ends here, None if a consumer may follow."""
+    end = run.run_agent(Role.WRITER, writer_messages(run.task, run.world))
+    if end == _END_STEP_LIMIT:
+        return Status.WRITER_STEP_LIMIT
+    if end == _END_TRUNCATED:
+        return Status.WRITER_TRUNCATED
+    if not run.entries:
+        return Status.WRITER_NO_STATE
+    return None
+
+
+def execute_writer(
+    config: RunConfig,
+    world: World,
+    client: ChatClient,
+    *,
+    run_id: str | None = None,
+    clock: Callable[[], str] | None = None,
+) -> RunResult:
+    """Execute the writer of a run and stop: no consumer is started.
+
+    For checks that concern what writers record and must not observe what a
+    consumer does with it (§5, *Check of the fidelity measure*). The writer is
+    shown and gated exactly as in ``execute_run``.
+    """
+    run = _Run(config, world, client, run_id=run_id or run_id_for(config), clock=clock)
+    return _guarded(run, lambda: _writer_phase(run) or Status.WRITER_DONE, ablated_from=None)
 
 
 def execute_consumer(
