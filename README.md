@@ -40,7 +40,7 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
 | v0.4 | Analysis script and the estimator it is computed with | **Current** | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
-| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds | In preparation | — |
+| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity | In preparation | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
 The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, which is in preparation and not yet deposited. What is still withheld to v1.0 is the ablation search strategy and the benignness review.
@@ -79,6 +79,8 @@ harness/gate.py        deterministic policy gate; decides D7(i)-(ii)
 harness/executor.py    run executor: writer, shared state, consumer (v0.5, in preparation)
 harness/pilot.py       pilot runner: the runs of §5, the consumer re-run, the pilot table (v0.5, in preparation)
 harness/worlds.py      task worlds: loading, structural signature, lexicon lint (v0.5, in preparation)
+harness/fidelity.py    writer fidelity: reference answer from the world, matcher (v0.5, in preparation)
+harness/writer_check.py check of the fidelity measure on writers it was not fitted to (v0.5, in preparation)
 worlds/                the 25 task worlds, one per task (v0.5, in preparation)
 tests/                 the gate the above must pass
 ```
