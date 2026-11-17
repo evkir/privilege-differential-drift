@@ -242,7 +242,7 @@ def test_the_check_of_the_amended_briefs_is_the_twelve_runs_section_5_registers(
 
 
 def test_the_recorded_result_of_the_check_is_what_the_rules_give_over_pilot_and_check():
-    block = DOCUMENT.split("**Result of the check.**", 1)[1].split("**Statistical plan.**", 1)[0]
+    block = DOCUMENT.split("**Result of the check.**", 1)[1].split("**Check of the context limit.**", 1)[0]
     cells, check = _table_groups(block)
     assert set(check) == {pilot.group_label(family, think) for family, think in pilot.BRIEF_CHECK_MODELS}
     assert sum(g["runs"] for g in check.values()) == len(pilot.brief_check_plan()) == 12
