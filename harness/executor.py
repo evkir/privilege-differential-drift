@@ -147,6 +147,7 @@ __all__ = [
     "ChatResponse",
     "ChatClient",
     "ModelError",
+    "ContextOverflow",
     "OllamaClient",
     "RunConfig",
     "StateEntry",
@@ -676,6 +677,16 @@ class ModelError(Exception):
     """
 
 
+class ContextOverflow(ModelError):
+    """The request does not fit in the context the run was given.
+
+    Unlike other backend failures this one is deterministic: the same messages
+    under the same ``num_ctx`` are refused again. The agent is ended as cut off,
+    the way a reply that reaches the reply-length limit is, and the run is not
+    executed again.
+    """
+
+
 @dataclass(frozen=True)
 class ChatResponse:
     """One reply from the model, reduced to what the executor uses."""
@@ -713,6 +724,12 @@ _STAT_FIELDS = (
     "eval_duration",
 )
 
+#: The error type Ollama gives a request refused because it does not fit in
+#: ``num_ctx`` (observed with server 0.32.5 on 16 November 2026, HTTP 400).
+_OVERFLOW_ERROR = "exceed_context_size_error"
+#: What the call log records for a model call the server refused on that ground.
+_OVERFLOW_REASON = "context_overflow"
+
 
 class OllamaClient:
     """Minimal client for a local Ollama server (`/api/chat`, non-streaming)."""
@@ -740,8 +757,10 @@ class OllamaClient:
             with urllib.request.urlopen(request, timeout=self._timeout) as response:
                 body = response.read()
         except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", "replace")[:500]
-            raise ModelError(f"{path}: HTTP {exc.code}: {detail}") from None
+            detail = exc.read().decode("utf-8", "replace")
+            if exc.code == 400 and _OVERFLOW_ERROR in detail:
+                raise ContextOverflow(f"{path}: HTTP 400: {detail[:500]}") from None
+            raise ModelError(f"{path}: HTTP {exc.code}: {detail[:500]}") from None
         except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as exc:
             raise ModelError(f"{path}: {exc}") from None
         try:
@@ -764,6 +783,12 @@ class OllamaClient:
             "tools": tools,
             "options": options,
             "stream": False,
+            # Left to its defaults the server shortens a conversation that does
+            # not fit in num_ctx, and shifts the context when a reply reaches
+            # its end, both without saying so (§5). With both off it refuses
+            # the first and stops the second with done_reason "length".
+            "truncate": False,
+            "shift": False,
         }
         if think is not None:
             payload["think"] = think
@@ -1111,13 +1136,26 @@ class _Run:
         self.transcript[agent] = {"messages": messages, "tools": [t["function"]["name"] for t in tools]}
         self.client.unload()
         for step in range(self.config.max_steps):
-            response = self.client.chat(
-                model=self.config.model,
-                messages=messages,
-                tools=tools,
-                options=self.config.options(),
-                think=self.config.think,
-            )
+            try:
+                response = self.client.chat(
+                    model=self.config.model,
+                    messages=messages,
+                    tools=tools,
+                    options=self.config.options(),
+                    think=self.config.think,
+                )
+            except ContextOverflow as exc:
+                self.calls.append(
+                    {
+                        "agent": agent,
+                        "step": step,
+                        "done_reason": _OVERFLOW_REASON,
+                        "thinking": "",
+                        "n_tool_calls": 0,
+                        "error": str(exc),
+                    }
+                )
+                return _END_TRUNCATED
             self.calls.append(
                 {
                     "agent": agent,

@@ -55,6 +55,7 @@ from executor import (  # noqa: E402
     UNKNOWN_TOOL_TEXT,
     WRITER_SYSTEM_PROMPT,
     ChatResponse,
+    ContextOverflow,
     ModelError,
     OllamaClient,
     RunConfig,
@@ -1353,7 +1354,8 @@ def test_the_client_sends_a_non_streaming_chat_request_in_ollamas_shape(stub):
     _, path, body = _Stub.seen[-1]
     assert path == "/api/chat"
     assert body == {"model": "m", "messages": messages, "tools": tool_schemas(0),
-                    "options": {"seed": 3, "num_ctx": 4096}, "stream": False, "think": False}
+                    "options": {"seed": 3, "num_ctx": 4096}, "stream": False, "think": False,
+                    "truncate": False, "shift": False}
     assert response.tool_calls == ({"function": {"name": "fs.read_file", "arguments": {"path": "a"}}},)
     assert (response.content, response.thinking, response.done_reason) == ("", "t", "stop")
     assert response.stats == {"total_duration": 5, "load_duration": 1, "prompt_eval_count": 11,
@@ -1379,8 +1381,51 @@ def test_the_client_leaves_think_out_unless_it_is_set(stub):
 )
 def test_every_backend_failure_surfaces_as_a_model_error(stub, route):
     _Stub.routes["/api/chat"] = route
-    with pytest.raises(ModelError):
+    with pytest.raises(ModelError) as raised:
         OllamaClient(stub).chat(model="m", messages=[], tools=[], options={}, think=None)
+    assert not isinstance(raised.value, ContextOverflow)
+
+
+#: The body Ollama 0.32.5 returned on 16 November 2026 for a request of 2231
+#: tokens under num_ctx 1024 with truncate off, verbatim.
+OVERFLOW_BODY = b'{"error": "{\\"error\\":{\\"code\\":400,\\"message\\":\\"request (2231 tokens) exceeds the available context size (1024 tokens), try increasing it\\",\\"type\\":\\"exceed_context_size_error\\",\\"n_prompt_tokens\\":2231,\\"n_ctx\\":1024}}"}'
+
+
+def test_a_request_that_does_not_fit_the_context_is_a_context_overflow(stub):
+    _Stub.routes["/api/chat"] = (400, OVERFLOW_BODY)
+    with pytest.raises(ContextOverflow, match="exceeds the available context size"):
+        OllamaClient(stub).chat(model="m", messages=[], tools=[], options={}, think=None)
+    assert issubclass(ContextOverflow, ModelError)
+
+
+def test_the_overflow_error_type_alone_does_not_make_an_overflow_of_another_status(stub):
+    _Stub.routes["/api/chat"] = (500, OVERFLOW_BODY)
+    with pytest.raises(ModelError) as raised:
+        OllamaClient(stub).chat(model="m", messages=[], tools=[], options={}, think=None)
+    assert not isinstance(raised.value, ContextOverflow)
+
+
+@pytest.mark.parametrize(
+    "writer_replies, consumer_replies, expected, agent",
+    [
+        ([ContextOverflow("too long")], [], Status.WRITER_TRUNCATED, "writer"),
+        (WRITER_OK[:1] + [ContextOverflow("too long")], [], Status.WRITER_TRUNCATED, "writer"),
+        (WRITER_OK, [ContextOverflow("too long")], Status.CONSUMER_TRUNCATED, "consumer"),
+        (WRITER_OK, [_reply(("fs.read_file", {"path": "top.txt"})), ContextOverflow("too long")],
+         Status.CONSUMER_TRUNCATED, "consumer"),
+    ],
+    ids=["writer-first-call", "writer-later-call", "consumer-first-call", "consumer-later-call"],
+)
+def test_a_context_overflow_ends_the_agent_as_cut_off_not_as_a_backend_failure(
+    writer_replies, consumer_replies, expected, agent
+):
+    result, client = _run(consumer_replies, writer_replies=writer_replies)
+    assert result.status == expected and result.error is None and not client.replies
+    last = result.transcript["calls"][-1]
+    assert (last["agent"], last["done_reason"], last["n_tool_calls"]) == (agent, "context_overflow", 0)
+    assert last["error"] == "too long"
+    result.journal.verify()
+    assert result.journal.closed and result.journal.events[-1].payload == {"status": expected}
 
 
 def test_an_unreachable_server_is_a_model_error():
