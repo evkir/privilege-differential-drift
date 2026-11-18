@@ -40,10 +40,10 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
 | v0.4 | Analysis script and the estimator it is computed with | **Current** | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
-| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity | In preparation | — |
+| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity, ablation search and budget | In preparation | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
-The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, which is in preparation and not yet deposited. What is still withheld to v1.0 is the ablation search strategy and the benignness review.
+The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, which is in preparation and not yet deposited. The ablation search is registered in v0.5 with its budget. What is still withheld to v1.0 is the benignness review.
 
 v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
 
@@ -74,6 +74,7 @@ PREREGISTRATION.md     hypotheses, definitions, protocol, falsification criteria
 analysis/power.py      power, sample size and minimum detectable effect
 analysis/allowlists.py the three authority levels and the gaps they induce
 analysis/tasks.py      the frozen task set and machine-readable mandates
+analysis/budget.py     time of collection and of the exhaustive ablation (v0.5, in preparation)
 harness/journal.py     append-only, hash-chained event log of every run
 harness/gate.py        deterministic policy gate; decides D7(i)-(ii)
 harness/executor.py    run executor: writer, shared state, consumer (v0.5, in preparation)
@@ -91,6 +92,7 @@ Each analysis module prints its own tables when run directly:
 python analysis/power.py
 python analysis/allowlists.py
 python analysis/tasks.py
+python analysis/budget.py
 ```
 
 The modules depend on nothing outside the standard library. The test suite needs `pytest` and is run with `python -m pytest tests/ -q`.

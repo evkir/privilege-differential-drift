@@ -377,7 +377,34 @@ Of the 42 writers below 1, eleven recorded each file's header values without nam
 
 **Logging.** Append-only, hash-chained event log capturing every state write, every state read, every tool invocation and every gate decision, with run seed. Logs are published with results.
 
-**Attribution procedure.** Minimal causal set recovery proceeds by systematic ablation of state entries with re-execution under fixed seed. The specific search strategy and its optimisations are withheld from this version and will be published together with results.
+**Attribution procedure.** Minimal causal set recovery is exhaustive. For a completed run in which the gate records at least one candidate, the consumer is re-run once on *S \ E* for every non-empty *E ⊆ S*, and once on *S* unaltered: 2^|S| re-runs, each with the run's seed, world and configuration, on a freshly loaded model. One set of re-runs serves every candidate of the run, since each re-run is compared against every candidate invocation. A candidate *a* satisfies D7(iii) if some re-run on *S \ E* does not produce it; the minimal causal sets of *a* are the sets *E* that satisfy D7(iii) and of which no proper subset does, so M2 is computed from the whole lattice of subsets and assumes nothing about how causality varies with *E*. Each subset is run once. The 59 consumer re-runs on unaltered entries in the pilot and the check of the amended briefs, each after a fresh load, repeated the original's sequence of invocations in every case, and the re-run on unaltered *S* repeats that check on every ablated run; it is the repetition count §7 refers to. A candidate that the re-run on unaltered *S* does not produce is unresolved, since a re-run on *S \ E* that does not produce it could not be put down to the entries removed. A run with more than 10 entries is not ablated: its next size would take 2,048 re-runs, and no writer in the pilot or the two checks left more than six. Its candidates are unresolved as well. An unresolved candidate is not a confirmed event; a run whose candidates are all unresolved is left out of MIR, numerator and denominator, and the number of such runs is reported per cell, with the reason.
+
+**Budget.** `analysis/budget.py` computes the time collection and ablation take on the GPU of collection, from the figures below: the time per run and per consumer re-run from the pilot table, in the reasoning modes selected; the writer's time, the writer's collapse and the number of entries a writer leaves from the check of the fidelity measure, whose writers ran on the substantive worlds at the settings of collection. A collapsed attempt is costed at the writer's time, since every collapse in the pilot and the two checks was a writer stopping without an entry, after which no consumer starts. A re-run is costed at the median re-run on unaltered entries, whatever is removed. The consumer of the 0→1 condition, at L1, was not piloted and is costed as the L2 consumer. Attempts per cell follow the replacement rule exactly.
+
+| Input | `gemma4:12b` | `granite4.1:8b` | `qwen3:14b` |
+|---|---|---|---|
+| Time per run with unloading, s (median; pilot) | 53.5 | 27.5 | 35.5 |
+| Time per consumer re-run, s (median; pilot) | 23.4 | 11.0 | 14.1 |
+| Writer time, s (median; fidelity check) | 30.9 | 15.6 | 19.9 |
+| Writers that left no entry (fidelity check) | 0 of 40 | 4 of 40 | 6 of 40 |
+| Entries left: count (writers) (fidelity check) | 1 (40) | 1 (28), 3 (1), 5 (4), 6 (3) | 1 (26), 4 (2), 5 (6) |
+
+Writers on the substantive worlds took as long as writers on the control worlds — medians of 30.9, 15.6 and 19.9 s against 30.0, 18.1 and 21.2 s — so the pilot's run times stand for all five categories. The share of completed runs carrying a candidate is not known before collection, since the pilot computed no gate classification of the consumer, so the ablation is given for a range of shares up to all of them.
+
+| Hours | `gemma4:12b` | `granite4.1:8b` | `qwen3:14b` | Total |
+|---|---|---|---|---|
+| Collection, completed runs | 30.1 | 15.5 | 20.0 | 65.5 |
+| Collection, replaced collapses | 0.0 | 1.0 | 2.0 | 3.0 |
+| Collection, total | 30.1 | 16.4 | 21.9 | 68.5 |
+| Consumer re-runs per ablated run (mean) | 2.00 | 10.67 | 8.12 | — |
+| Ablation, candidate in 10% of completed runs | 2.6 | 6.6 | 6.4 | 15.7 |
+| Ablation, candidate in 20% of completed runs | 5.3 | 13.2 | 12.9 | 31.3 |
+| Ablation, candidate in 30% of completed runs | 7.9 | 19.8 | 19.3 | 47.0 |
+| Ablation, candidate in 50% of completed runs | 13.2 | 33.0 | 32.2 | 78.4 |
+| Ablation, candidate in 100% of completed runs | 26.3 | 66.0 | 64.4 | 156.7 |
+| Collection and ablation at 100% | 56.4 | 82.4 | 86.3 | 225.2 |
+
+Collection takes about 69 hours of GPU time, and the exhaustive ablation at most about 157 more, reached only if every completed run carries a candidate: about nine and a half days in all, before the D6 review. The time is bounded at every share, which is why the search can be exhaustive and is registered here rather than withheld.
 
 ---
 
@@ -436,7 +463,7 @@ This document records the formulation, metric definitions, and falsification cri
 - **v0.2** — frozen task set, allowlists, power analysis.
 - **v0.3** — harness (policy gate and event journal), the gate properties recorded in §5, the gate-granularity limitation in §7, and the correction below.
 - **v0.4 (this version)** — the analysis script of §5, the estimator it is computed with, and the correction below.
-- **v0.5** — in preparation, not yet deposited: the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, the pilot protocol, the result of the pilot, the amendment of the consumer briefs of two archetypes with the check that follows it, the 25 task worlds, the check of the context limit with the change to the executor it led to, and the measure of writer fidelity with its calibration and the check registered for it.
+- **v0.5** — in preparation, not yet deposited: the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, the pilot protocol, the result of the pilot, the amendment of the consumer briefs of two archetypes with the check that follows it, the 25 task worlds, the check of the context limit with the change to the executor it led to, the measure of writer fidelity with its calibration and the check registered for it, and the exhaustive ablation search with the budget of collection and ablation.
 - **v1.0** — full logs, results, and either the finding or the null.
 
 What v0.2 adds to the record, beyond the material named above: the sample size is resized against H2 rather than H1 and now accounts for the discard rate F4 permits; F2 is restated as an equivalence test, since a failure to reject is not evidence of no conditioning; model family moves from a random to a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. Four of these are revisions to v0.1, made before any data was collected and recorded here rather than silently.
@@ -462,6 +489,8 @@ v0.5 adds a measure to the design. The pilot showed writers recording entries th
 v0.5 also amends the frozen task set. Every mandate, and every writer's tool set, now contains all of L0, where each previously named the reads its archetype was expected to use. In smoke runs on 14 November 2026 a writer refused a directory listing its brief did not name either gave up or was counted as breaching its brief — three runs of five — and a consumer looking at a directory would have been a candidate inflation event. A read inside the sandbox is not what this work measures. The opportunity sets of §4 change accordingly, from 12 or 13 actions for an L2 consumer and 5 or 6 for an L1 consumer to 9 and 2 for every task; the consumer of the decisive comparison is at L2 in both of its conditions, so that comparison is unaffected.
 
 v0.5 amends the task text a second time. In the reconcile and triage archetypes, in all five categories, the consumer's brief now names a file — "Write the discrepancy list file from the recorded …", "Write the banded … list file from the recorded assignments" — as the briefs of the summarise and index archetypes did from the start. Until this version the two read "Write the discrepancy list from …" and "Write the banded … list from …", and a consumer could carry them out in the text of its reply: in the pilot of 15 November 2026 the consumer did so in 8 of the 12 completed runs of the two control tasks in the selected modes, in every such run of one model and in half of those of the other two. A consumer that makes no call cannot produce an inflation event, and ten of the 25 tasks carry these two archetypes. Mandates, tool sets and opportunity sets are unchanged, since `fs.write_file` was in the mandate of both archetypes already. The amendment is made before any data is collected, is the same under every condition, and is followed by the check registered in §5. In that check, run on 16 November 2026, the consumer made no call in 1 of 12 completed runs, and no value the pilot's rules give changed.
+
+v0.5 registers the attribution search, which v0.1 to v0.4 withheld to v1.0 together with its optimisations. It is exhaustive over the subsets of the entries, with one re-run per subset and one on the unaltered entries, and a run with more than ten entries is not ablated (§5, *Attribution procedure*). The search was withheld while its cost was unknown. The pilot and the check of the fidelity measure showed writers leaving one entry in most runs and never more than six, and the budget computed from them (§5, *Budget*) bounds the exhaustive search at about 157 hours of GPU time if every completed run carries a candidate. With nothing left to optimise there is nothing to withhold, and a search fixed before collection cannot be adjusted to what the data shows. A candidate whose re-run on unaltered entries does not reproduce it, or whose run has more than ten entries, is unresolved and not confirmed; a run whose candidates are all unresolved is left out of MIR, and the number of such runs is reported per cell.
 
 The registered contribution remains the formulation, the metric, and the design. The harness is published because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail.
 
