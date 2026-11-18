@@ -39,17 +39,19 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.1 | Hypotheses, metrics, protocol, falsification criteria | Superseded | [10.5281/zenodo.23513215](https://doi.org/10.5281/zenodo.23513215) |
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
-| v0.4 | Analysis script and the estimator it is computed with | **Current** | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
-| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity, ablation search and budget | In preparation | — |
+| v0.4 | Analysis script and the estimator it is computed with | Superseded | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
+| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity, ablation search and budget | **Current, not yet deposited** | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
-The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, which is in preparation and not yet deposited. The ablation search is registered in v0.5 with its budget. What is still withheld to v1.0 is the benignness review.
+The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, with the task worlds, the measure of writer fidelity, and the ablation search with its budget. What is still withheld to v1.0 is the benignness review.
 
 v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
 
 v0.3 registers four properties of the policy gate that determine what the metric counts, records the gate's tool-name granularity as a threat to construct validity, and corrects two figures that still described the v0.1 sample size.
 
 v0.4 freezes the analysis script §5 registers and records the estimator it is computed with, including the checks that estimator has to pass before collection and the independent refit reported beside it afterwards. It also withdraws a claim carried since v0.2: the version list named an analysis script among v0.2's frozen material, and no such script was in that deposit or in v0.3. §9 of the pre-registration records every set of revisions, this correction included.
+
+v0.5 registers everything collection runs on, all before any data is collected: the run executor and what the agents are shown, three open-weight models run locally, the endings of a run and the replacement of collapsed runs, a pilot whose rules fixed the remaining parameters and replaced two of the three first models, the 25 task worlds, a measure of the accuracy of the writer's entries checked on writers it was not fitted to, and the exhaustive ablation search with the budget of collection and ablation. It amends the frozen task set twice and corrects the name of one category; §9 records why.
 
 **A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
 
@@ -74,16 +76,16 @@ PREREGISTRATION.md     hypotheses, definitions, protocol, falsification criteria
 analysis/power.py      power, sample size and minimum detectable effect
 analysis/allowlists.py the three authority levels and the gaps they induce
 analysis/tasks.py      the frozen task set and machine-readable mandates
-analysis/budget.py     time of collection and of the exhaustive ablation (v0.5, in preparation)
+analysis/budget.py     time of collection and of the exhaustive ablation (v0.5)
 harness/journal.py     append-only, hash-chained event log of every run
 harness/gate.py        deterministic policy gate; decides D7(i)-(ii)
-harness/executor.py    run executor: writer, shared state, consumer (v0.5, in preparation)
-harness/pilot.py       pilot runner: the runs of §5, the consumer re-run, the pilot table (v0.5, in preparation)
-harness/worlds.py      task worlds: loading, structural signature, lexicon lint (v0.5, in preparation)
-harness/fidelity.py    writer fidelity: reference answer from the world, matcher (v0.5, in preparation)
-harness/writer_check.py check of the fidelity measure on writers it was not fitted to (v0.5, in preparation)
-harness/ablation.py    D7(iii) ablation: exhaustive re-runs, minimal causal sets (v0.5, in preparation)
-worlds/                the 25 task worlds, one per task (v0.5, in preparation)
+harness/executor.py    run executor: writer, shared state, consumer (v0.5)
+harness/pilot.py       pilot runner: the runs of §5, the consumer re-run, the pilot table (v0.5)
+harness/worlds.py      task worlds: loading, structural signature, lexicon lint (v0.5)
+harness/fidelity.py    writer fidelity: reference answer from the world, matcher (v0.5)
+harness/writer_check.py check of the fidelity measure on writers it was not fitted to (v0.5)
+harness/ablation.py    D7(iii) ablation: exhaustive re-runs, minimal causal sets (v0.5)
+worlds/                the 25 task worlds, one per task (v0.5)
 tests/                 the gate the above must pass
 ```
 
