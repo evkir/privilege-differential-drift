@@ -3,10 +3,10 @@
 **A pre-registration of hypotheses, metrics, and falsification criteria**
 
 **Author:** Evgeny Kiryak — MASec Lab (independent)
-**Version:** 0.2 (pre-registration; no results)
-**Date:** 2026-10-27 (v0.1: 2026-10-20)
-**License:** CC BY 4.0 for this document (`LICENSE`); Apache-2.0 for the code in `analysis/` and `tests/` (`LICENSE-CODE`).
-**Status:** Hypotheses, protocol, task set, allowlists and power analysis registered prior to data collection. Harness and results withheld to v1.0.
+**Version:** 0.5 (pre-registration; no results)
+**Date:** 2026-11-18 (v0.1: 2026-10-20)
+**License:** CC BY 4.0 for this document (`LICENSE`); Apache-2.0 for the code in `analysis/`, `harness/` and `tests/` (`LICENSE-CODE`).
+**Status:** Hypotheses, protocol, task set and task worlds, allowlists, power analysis, harness, analysis script, the pilot and its result, and the ablation procedure registered prior to data collection. No data has been collected. The D6 benignness review and the results are withheld to v1.0.
 
 ---
 
@@ -462,8 +462,8 @@ This document records the formulation, metric definitions, and falsification cri
 - **v0.1** — hypotheses, metrics, protocol, falsification criteria. Superseded; remains citable at its own DOI.
 - **v0.2** — frozen task set, allowlists, power analysis.
 - **v0.3** — harness (policy gate and event journal), the gate properties recorded in §5, the gate-granularity limitation in §7, and the correction below.
-- **v0.4 (this version)** — the analysis script of §5, the estimator it is computed with, and the correction below.
-- **v0.5** — in preparation, not yet deposited: the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, the pilot protocol, the result of the pilot, the amendment of the consumer briefs of two archetypes with the check that follows it, the 25 task worlds, the check of the context limit with the change to the executor it led to, the measure of writer fidelity with its calibration and the check registered for it, and the exhaustive ablation search with the budget of collection and ablation.
+- **v0.4** — the analysis script of §5, the estimator it is computed with, and the correction below.
+- **v0.5 (this version)** — the run executor and what the agents are shown, the fresh load of the model before each agent, the models and their sampling parameters, run outcomes and the replacement of collapsed runs, the family-replacement rule, the pilot protocol, the result of the pilot, the amendment of the consumer briefs of two archetypes with the check that follows it, the 25 task worlds, the check of the context limit with the change to the executor it led to, the measure of writer fidelity with its calibration and the check registered for it, and the exhaustive ablation search with the budget of collection and ablation.
 - **v1.0** — full logs, results, and either the finding or the null.
 
 What v0.2 adds to the record, beyond the material named above: the sample size is resized against H2 rather than H1 and now accounts for the discard rate F4 permits; F2 is restated as an equivalence test, since a failure to reject is not evidence of no conditioning; model family moves from a random to a fixed effect; and the two comparisons in H1 are distinguished by what each can establish. Four of these are revisions to v0.1, made before any data was collected and recorded here rather than silently.
@@ -477,8 +477,6 @@ What v0.4 adds, all before any data collection: the analysis script registered i
 v0.4 also withdraws a claim this document has carried since v0.2. The version list above named an analysis script among the material frozen in v0.2, and the README repeated it. No such script was in the v0.2 deposit or in the v0.3 deposit: `analysis/power.py` sizes the design and states in its own documentation that it is not the analysis model, and the model of §5 had no implementation until this version. The claim is withdrawn and the script it described is frozen here. The test that holds this document and the code together was comparing registered figures only, which is why a missing artifact passed it; it now also requires that every source file this document names is present, so an artifact can no longer be registered in prose without existing.
 
 What v0.5 adds, all before any data collection: the run executor of §5 and the choices it makes about what the agents are shown, including the description of the environment and the request for one tool call per reply, both added after smoke runs; the unloading of the model before each agent and before the consumer of each re-run, added after repeats under one seed diverged with the state the server was left in; the three models, run locally, with the reading of "distinct providers" as three developers of open weights; the decision to run each model at its shipped sampling parameters rather than at a temperature chosen for the design; the definition of a completed run that M1's validity condition refers to, and the separation of collapsed runs from D6 discards, with the replacement of collapsed runs, its limit and the checks it requires; a rule for replacing a family that cannot carry out the task, with a candidate of the same size named for each family it can apply to; and a pilot protocol that fixes, by rules stated in advance, the parameters that could not be fixed without running the models. The pilot also re-runs each consumer on unaltered entries, and collection does not start if any such re-run acts differently. The pilot was run on 15 November 2026 and its table is in §5: `llama3.1:8b` and `mistral-nemo:12b` exceeded the collapse threshold and are replaced by `granite4.1:8b` and `gemma4:12b`, both reasoning modes are off, and no consumer re-run acted differently. §7 records the external validity of the design, the confounding of model family with model size, the harness choices made on smoke runs, and collapse as a source of selection.
-
-This version is recorded as it is written.
 
 v0.5 adds the worlds the tasks are carried out against, described in §5: 25 files, one per task, frozen with the task set. The five control worlds were written on 14 November 2026, before the pilot, and are the worlds its runs used; they are unchanged since. The twenty worlds of the four substantive categories were written on 16 November 2026, after the pilot and the check of the amended briefs and before any run on them. Each was built to the structural signature of the control world of its archetype, and none uses a term of the scope-expansion lexicon.
 
