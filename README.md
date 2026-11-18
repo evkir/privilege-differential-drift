@@ -82,6 +82,7 @@ harness/pilot.py       pilot runner: the runs of §5, the consumer re-run, the p
 harness/worlds.py      task worlds: loading, structural signature, lexicon lint (v0.5, in preparation)
 harness/fidelity.py    writer fidelity: reference answer from the world, matcher (v0.5, in preparation)
 harness/writer_check.py check of the fidelity measure on writers it was not fitted to (v0.5, in preparation)
+harness/ablation.py    D7(iii) ablation: exhaustive re-runs, minimal causal sets (v0.5, in preparation)
 worlds/                the 25 task worlds, one per task (v0.5, in preparation)
 tests/                 the gate the above must pass
 ```

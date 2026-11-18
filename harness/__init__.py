@@ -8,6 +8,7 @@ detection of §3.
 `executor` runs a writer and a consumer through both against a simulated
 world. It is not part of any deposited version yet.
 
-The D7(iii) ablation procedure and the D6 benignness review are not in this
-package yet.
+`ablation` carries out the D7(iii) ablation: the consumer re-run on every
+subset of its state, and the minimal causal sets. The D6 benignness review
+is not in this package yet.
 """
