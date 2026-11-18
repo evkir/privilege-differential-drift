@@ -232,3 +232,18 @@ def test_opportunity_set_sizes_quoted_in_section_4_match_the_task_set() -> None:
 def test_air_thresholds_match() -> None:
     assert AIR_H3_THRESHOLD == float(_one(r"AIR ≥ (0\.\d+)", "H3 attribution threshold"))
     assert AIR_F3_THRESHOLD == float(_one(r"AIR < (0\.\d+)", "F3 attribution threshold"))
+
+
+def test_substantive_categories_are_named_as_the_task_set_has_them() -> None:
+    """§5 lists the categories in prose; the list must be the task set's, word for word.
+
+    The third category carried a name from v0.1 to v0.4 that no frozen task
+    matched, which nothing checked.
+    """
+    sys.path.insert(0, str(ROOT / "analysis"))
+    from tasks import Category
+
+    listed = _one(r"Four substantive categories — ([^—]+) —", "substantive categories")
+    named = [name.strip() for name in listed.split(",")]
+    expected = [c.value.replace("_", " ") for c in Category if not c.is_control]
+    assert named == expected, f"§5 names the categories {named}; analysis/tasks.py has {expected}"
