@@ -17,8 +17,11 @@ identifiers:
     value: 10.5281/zenodo.23513214
     description: Concept DOI — all versions
   - type: doi
+    value: 10.5281/zenodo.24541162
+    description: Version v0.6 (current)
+  - type: doi
     value: 10.5281/zenodo.24336781
-    description: Version v0.5 (current)
+    description: Version v0.5 (superseded by v0.6)
   - type: doi
     value: 10.5281/zenodo.24080308
     description: Version v0.4 (superseded by v0.5)
@@ -58,6 +61,11 @@ abstract: >-
   writer fidelity checked on writers it was not fitted to, and the
   exhaustive ablation search with the budget of collection and
   ablation.
+  Version 0.6 registers the order of collection, which version
+  0.5 left open: the rotation of a cell's replicates over its
+  tasks, the blocks by family, the seeded order of the cells
+  within a round, the ablation of each closed block, and the
+  runner that carries it out.
   Contains no results.
 keywords:
   - LLM agents
@@ -70,5 +78,5 @@ keywords:
 license:
   - CC-BY-4.0
   - Apache-2.0
-version: v0.5
-date-released: '2026-11-18'
+version: v0.6
+date-released: '2026-11-25'
