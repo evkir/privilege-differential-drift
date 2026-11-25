@@ -40,10 +40,11 @@ Deposited and timestamped: **[10.5281/zenodo.23513214](https://doi.org/10.5281/z
 | v0.2 | Frozen task set, allowlists, power analysis | Superseded | [10.5281/zenodo.23699919](https://doi.org/10.5281/zenodo.23699919) |
 | v0.3 | Policy gate and event journal, gate properties registered | Superseded | [10.5281/zenodo.23724565](https://doi.org/10.5281/zenodo.23724565) |
 | v0.4 | Analysis script and the estimator it is computed with | Superseded | [10.5281/zenodo.24080308](https://doi.org/10.5281/zenodo.24080308) |
-| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity, ablation search and budget | **Current** | [10.5281/zenodo.24336781](https://doi.org/10.5281/zenodo.24336781) |
+| v0.5 | Run executor, models, run outcomes, pilot protocol and its result, task worlds, writer fidelity, ablation search and budget | Superseded | [10.5281/zenodo.24336781](https://doi.org/10.5281/zenodo.24336781) |
+| v0.6 | Order of collection and its runner | **Current, not yet deposited** | — |
 | v1.0 | Logs, results — finding or null | Planned | — |
 
-The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, with the task worlds, the measure of writer fidelity, and the ablation search with its budget. What is still withheld to v1.0 is the benignness review.
+The registered contribution is the formulation, the metric, and the design. The harness is published from v0.3 because the gate's behaviour determines what the primary metric counts, which makes it part of the design rather than an implementation detail. The run executor, the models, the handling of runs that do not complete, the pilot protocol and the result of the pilot are written into the pre-registration as v0.5, with the task worlds, the measure of writer fidelity, and the ablation search with its budget. The order of collection and the runner that carries it out are registered in v0.6. What is still withheld to v1.0 is the benignness review.
 
 v0.2 revises v0.1 in four respects, all before any data collection: the sample size is resized against H2 and allows for the discard rate F4 permits; F2 becomes an equivalence test rather than a failure to reject; model family becomes a fixed effect; and the two comparisons in H1 are distinguished by what each can establish.
 
@@ -52,6 +53,8 @@ v0.3 registers four properties of the policy gate that determine what the metric
 v0.4 freezes the analysis script §5 registers and records the estimator it is computed with, including the checks that estimator has to pass before collection and the independent refit reported beside it afterwards. It also withdraws a claim carried since v0.2: the version list named an analysis script among v0.2's frozen material, and no such script was in that deposit or in v0.3. §9 of the pre-registration records every set of revisions, this correction included.
 
 v0.5 registers everything collection runs on, all before any data is collected: the run executor and what the agents are shown, three open-weight models run locally, the endings of a run and the replacement of collapsed runs, a pilot whose rules fixed the remaining parameters and replaced two of the three first models, the 25 task worlds, a measure of the accuracy of the writer's entries checked on writers it was not fitted to, and the exhaustive ablation search with the budget of collection and ablation. It amends the frozen task set twice and corrects the name of one category; §9 records why.
+
+v0.6 registers the order of collection, which v0.5 left open, before any data is collected: which of a cell's five tasks each replicate is run on, the order of the families and of the cells within a family, and when ablation is run, with the runner that carries it out.
 
 **A null result will be published.** The conditions under which the hypothesis is considered refuted are fixed in advance in §6 of the pre-registration, before any data is collected.
 
@@ -85,6 +88,7 @@ harness/worlds.py      task worlds: loading, structural signature, lexicon lint 
 harness/fidelity.py    writer fidelity: reference answer from the world, matcher (v0.5)
 harness/writer_check.py check of the fidelity measure on writers it was not fitted to (v0.5)
 harness/ablation.py    D7(iii) ablation: exhaustive re-runs, minimal causal sets (v0.5)
+harness/collect.py     collection runner: order of the cells, replacement, resumption, ablation per block (v0.6)
 worlds/                the 25 task worlds, one per task (v0.5)
 tests/                 the gate the above must pass
 ```
