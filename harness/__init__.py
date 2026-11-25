@@ -11,4 +11,8 @@ world. It is registered in v0.5.
 `ablation` carries out the D7(iii) ablation: the consumer re-run on every
 subset of its state, and the minimal causal sets. The D6 benignness review
 is not in this package yet.
+
+`collect` runs collection: the cells of the design in the order §5 registers,
+the replacement of collapsed runs, and the ablation of each closed block. It is
+registered in v0.6.
 """

@@ -247,3 +247,25 @@ def test_substantive_categories_are_named_as_the_task_set_has_them() -> None:
     named = [name.strip() for name in listed.split(",")]
     expected = [c.value.replace("_", " ") for c in Category if not c.is_control]
     assert named == expected, f"§5 names the categories {named}; analysis/tasks.py has {expected}"
+
+
+def test_the_order_of_collection_is_the_one_section_5_registers() -> None:
+    """The runner's order is §5's: rotation over tasks, the block order, the round seed, its file.
+
+    v0.5 registered index order within a cell and left the rest to the runner;
+    v0.6 writes it into §5, and this holds the runner's constants to that text.
+    """
+    sys.path.insert(0, str(ROOT / "harness"))
+    sys.path.insert(0, str(ROOT / "analysis"))
+    import collect
+    from pilot import FAMILIES
+
+    block = _one(r"\*\*Order of collection\.\*\*(.+)", "the order of collection")
+    assert f"seed fixed here ({collect.ORDER_SEED})" in block
+    assert "position *r* mod 5" in block
+    assert all(len(tasks) == 5 for tasks in collect._CATEGORY_TASKS.values())
+    tags = [FAMILIES[label].model for label, _ in collect.COLLECTION_FAMILIES]
+    assert ", then ".join(f"`{tag}`" for tag in tags) in block
+    assert f"the first {collect.TARGET} of that rotation" in block
+    assert "When every cell of a block is closed" in block
+    assert "`harness/collect.py`" in block
